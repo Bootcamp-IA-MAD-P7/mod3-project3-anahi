@@ -5,6 +5,7 @@
 !.env.example
 
 # Tools
+__pycache__/
 .pytest_cache/
 .ruff_cache/
 .coverage
