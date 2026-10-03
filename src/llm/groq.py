@@ -42,14 +42,13 @@ class GroqClient(BaseLLMClient):
 
         try:
             response = self._client.invoke(prompt)
+            usage = response.usage_metadata or {}
+            tokens_used = usage.get("total_tokens", 0)
+            register_request(user_id, tokens_used)
+            return LLMResponse(
+                text=response.content,
+                tokens_used=tokens_used,
+                model_name=self._model,
+            )
         except Exception as e:
             raise RuntimeError(f"Groq model {self._model} failed: {e}") from e
-
-        usage = response.usage_metadata or {}
-        tokens_used = usage.get("total_tokens", 0)
-        register_request(user_id, tokens_used)
-        return LLMResponse(
-            text=response.content,
-            tokens_used=tokens_used,
-            model_name=self._model,
-        )
