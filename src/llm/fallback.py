@@ -28,10 +28,13 @@ def _build_groq_cascade(selected_model: str) -> list[str]:
     return GROQ_MODELS[idx:] + GROQ_MODELS[:idx]
 
 
-def _build_openrouter_cascade() -> list[str]:
+def _build_openrouter_cascade(selected_model: str | None = None) -> list[str]:
     available = [m for m in OPENROUTER_MODELS if m]
     if not available:
         return []
+    if selected_model and selected_model in available:
+        idx = available.index(selected_model)
+        return available[idx:] + available[:idx]
     if OPENROUTER_DEFAULT in available:
         rest = [m for m in available if m != OPENROUTER_DEFAULT]
         return [OPENROUTER_DEFAULT] + rest
@@ -42,33 +45,43 @@ def run_with_fallback(
     selected_model: str,
     prompt: str,
     user_id: str,
+    provider: str = "groq",
 ) -> Generator[FallbackUpdate, None, None]:
-    groq_cascade = _build_groq_cascade(selected_model)
-    openrouter_cascade = _build_openrouter_cascade()
+    if provider == "openrouter":
+        primary_cascade = _build_openrouter_cascade(selected_model)
+        primary_client = OpenRouterClient
+        secondary_cascade = GROQ_MODELS
+        secondary_client = GroqClient
+    else:
+        primary_cascade = _build_groq_cascade(selected_model)
+        primary_client = GroqClient
+        secondary_cascade = _build_openrouter_cascade()
+        secondary_client = OpenRouterClient
+
     bypass_limits = False
 
-    for model in groq_cascade:
+    for model in primary_cascade:
         try:
-            client: BaseLLMClient = GroqClient(model=model)
+            client: BaseLLMClient = primary_client(model=model)
             result = client.generate(prompt, user_id, bypass_limits)
             yield FallbackUpdate(status=f"Generated with {model}", result=result)
             return
         except Exception:
             bypass_limits = True
-            next_model = _get_next(groq_cascade, openrouter_cascade, model)
+            next_model = _get_next(primary_cascade, secondary_cascade, model)
             yield FallbackUpdate(
                 status=f"Model {model} unavailable, trying {next_model}..."
             )
 
-    for model in openrouter_cascade:
+    for model in secondary_cascade:
         try:
-            client = OpenRouterClient(model=model)
+            client = secondary_client(model=model)
             result = client.generate(prompt, user_id, bypass_limits)
             yield FallbackUpdate(status=f"Generated with {model}", result=result)
             return
         except Exception:
             bypass_limits = True
-            next_model = _get_next([], openrouter_cascade, model)
+            next_model = _get_next([], secondary_cascade, model)
             yield FallbackUpdate(
                 status=f"Model {model} unavailable, trying {next_model}..."
             )
@@ -77,9 +90,9 @@ def run_with_fallback(
 
 
 def _get_next(
-    groq_cascade: list[str], openrouter_cascade: list[str], current: str
+    primary_cascade: list[str], secondary_cascade: list[str], current: str
 ) -> str:
-    combined = groq_cascade + openrouter_cascade
+    combined = primary_cascade + secondary_cascade
     if current in combined:
         idx = combined.index(current)
         if idx + 1 < len(combined):
