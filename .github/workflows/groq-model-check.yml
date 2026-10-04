@@ -5,6 +5,10 @@ on:
     - cron: "0 6 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   live-model-check:
     runs-on: ubuntu-latest
@@ -17,4 +21,40 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync
-      - run: uv run pytest tests/integration/ -m live
+      - name: Run live model tests
+        id: live-tests
+        run: uv run pytest tests/integration/ -m live --junitxml=report.xml
+      - name: Open issue on failure
+        if: failure() && steps.live-tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv run python - <<'PY' > issue.md
+          import re
+          import xml.etree.ElementTree as ET
+
+          tree = ET.parse("report.xml")
+          failed = []
+          for case in tree.iter("testcase"):
+              if case.find("failure") is None and case.find("error") is None:
+                  continue
+              name = case.get("name", "")
+              match = re.search(r"\[(.+)\]", name)
+              failed.append(match.group(1) if match else name)
+
+          lines = [
+              "The daily live Groq model check failed.",
+              "",
+              "Models that failed:",
+          ]
+          lines += [f"- {model}" for model in failed]
+          lines += [
+              "",
+              "Check current free tier availability and rate limits:"
+              " https://console.groq.com/docs/rate-limits",
+          ]
+          print("\n".join(lines))
+          PY
+          gh issue create \
+            --title "Daily Groq model check failed" \
+            --body-file issue.md
