@@ -39,12 +39,11 @@ for LLM provider details.
 
 The app is orchestrated with LangGraph (`src/graph/`), which routes prompt building
 (`src/prompts/`) through LLM clients (`src/llm/`). Groq is the primary provider and
-OpenRouter the secondary one, with `src/llm/fallback.py` cascading from the selected
-Groq model through the remaining Groq models and then the free OpenRouter models,
-yielding a status update per attempt. The frontend is planned as a Gradio UI, and
-RAG over arXiv papers is planned as the grounding source. Provider details, secrets
-and the daily model checks are documented in
-[docs/llm-setup.md](docs/llm-setup.md).
+OpenRouter the secondary one; `src/llm/fallback.py` cascades from the selected model
+of either provider into the other provider's models, yielding a status update per
+attempt. The frontend is planned as a Gradio UI, and RAG over arXiv papers is
+planned as the grounding source. Provider details, secrets and the daily model
+checks are documented in [docs/llm-setup.md](docs/llm-setup.md).
 
 ## Running Tests
 

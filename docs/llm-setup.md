@@ -28,12 +28,19 @@ https://openrouter.ai/models?q=:free
 
 ### Fallback chain
 
-`run_with_fallback()` in `src/llm/fallback.py` is a generator that yields a
-`FallbackUpdate` per attempt so callers can show progress. The order is:
+`run_with_fallback(selected_model, prompt, user_id, provider)` in
+`src/llm/fallback.py` is a generator that yields a `FallbackUpdate` per attempt so
+callers can show progress. `provider` decides which client starts and therefore the
+order:
 
-1. the selected Groq model (default `openai/gpt-oss-120b`), rotated to the front
-2. the remaining Groq models in `AVAILABLE_MODELS` order
-3. the OpenRouter free models, with `DEFAULT_MODEL` first
+- `provider="groq"` (default): the selected Groq model rotated to the front, then
+  the remaining Groq models in `AVAILABLE_MODELS` order, then the OpenRouter free
+  models with `DEFAULT_MODEL` first
+- `provider="openrouter"`: the OpenRouter free models rotated so the selected one
+  leads (`DEFAULT_MODEL` first when no model is selected), then all Groq models
+
+Any other value falls back to the Groq order. When both lists are exhausted the
+generator yields "All models unavailable, please try again later".
 
 Only the first attempt is checked against the rate and token limits. Every retry
 after a failure passes `bypass_limits=True` so one cascade does not consume the
