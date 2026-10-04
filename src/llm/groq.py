@@ -22,8 +22,6 @@ class GroqClient(BaseLLMClient):
     def __init__(
         self, model: str = DEFAULT_MODEL, max_tokens: int = MAX_TOKENS_PER_CALL
     ):
-        if model not in AVAILABLE_MODELS:
-            raise ValueError(f"Model {model} is not available on the free tier")
         settings = get_settings()
         self._model = model
         self._max_tokens = max_tokens
