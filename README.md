@@ -18,6 +18,7 @@ for LLM provider details.
   | Key | Where to get it |
   | --- | --- |
   | `GROQ_API_KEY` | https://console.groq.com/keys |
+  | `OPENROUTER_API_KEY` | https://openrouter.ai/settings/keys |
 
 - **Run the app:**
 
@@ -31,17 +32,19 @@ for LLM provider details.
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `GROQ_API_KEY` | Yes | API key for Groq, the primary LLM provider used for all generation calls |
-| `GEMINI_API_KEY` | Coming soon | API key for Gemini Flash, the secondary provider once `src/llm/gemini.py` lands |
+| `GROQ_API_KEY` | Yes | API key for Groq, the primary LLM provider |
+| `OPENROUTER_API_KEY` | Yes | API key for OpenRouter, the secondary provider that supplies the free model list |
 
 ## Architecture
 
 The app is orchestrated with LangGraph (`src/graph/`), which routes prompt building
-(`src/prompts/`) through LLM clients (`src/llm/`). Groq is the live provider today
-and Gemini Flash will join it as a secondary provider, with automatic fallback
-between them. The frontend is planned as a Gradio UI, and RAG over arXiv papers is
-planned as the grounding source. Provider details, secrets and the daily model check
-are documented in [docs/llm-setup.md](docs/llm-setup.md).
+(`src/prompts/`) through LLM clients (`src/llm/`). Groq is the primary provider and
+OpenRouter the secondary one, with `src/llm/fallback.py` cascading from the selected
+Groq model through the remaining Groq models and then the free OpenRouter models,
+yielding a status update per attempt. The frontend is planned as a Gradio UI, and
+RAG over arXiv papers is planned as the grounding source. Provider details, secrets
+and the daily model checks are documented in
+[docs/llm-setup.md](docs/llm-setup.md).
 
 ## Running Tests
 
@@ -51,7 +54,7 @@ are documented in [docs/llm-setup.md](docs/llm-setup.md).
   pytest
   ```
 
-- **Live LLM integration tests** (requires `GROQ_API_KEY`):
+- **Live LLM integration tests** (requires `GROQ_API_KEY` and `OPENROUTER_API_KEY`):
 
   ```bash
   RUN_LIVE_LLM_TESTS=1 pytest tests/integration/ -m live
