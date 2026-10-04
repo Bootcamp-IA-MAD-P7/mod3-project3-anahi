@@ -25,7 +25,9 @@ def _clean_old_requests(user_id: str) -> None:
     _request_log[user_id] = [t for t in _request_log[user_id] if t > cutoff]
 
 
-def check_rate_limit(user_id: str) -> None:
+def check_rate_limit(user_id: str, bypass_limits: bool = False) -> None:
+    if bypass_limits:
+        return
     _clean_old_requests(user_id)
     now = datetime.now()
 
@@ -44,7 +46,11 @@ def check_rate_limit(user_id: str) -> None:
         )
 
 
-def check_token_limit(user_id: str, tokens_to_use: int) -> None:
+def check_token_limit(
+    user_id: str, tokens_to_use: int, bypass_limits: bool = False
+) -> None:
+    if bypass_limits:
+        return
     if tokens_to_use > MAX_TOKENS_PER_CALL:
         raise TokenLimitError(
             f"Requested {tokens_to_use} tokens exceeds the per-call limit"

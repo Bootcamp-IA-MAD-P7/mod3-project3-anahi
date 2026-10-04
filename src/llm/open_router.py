@@ -12,6 +12,11 @@ from src.llm.security import (
 
 DEFAULT_MODEL = "inclusionai/ling-3.0-flash-sante:free"
 
+BLOCKED_MODELS = {
+    "thinkingmachines/inkling:free",
+    "thinkingmachines/inkling-small:free",
+}
+
 
 def get_available_models() -> list[str]:
     try:
@@ -24,7 +29,11 @@ def get_available_models() -> list[str]:
         if not response.ok:
             return [DEFAULT_MODEL]
         data = response.json()
-        models = [m["id"] for m in data["data"] if ":free" in m["id"]]
+        models = [
+            m["id"]
+            for m in data["data"]
+            if ":free" in m["id"] and m["id"] not in BLOCKED_MODELS
+        ]
         return models if models else [DEFAULT_MODEL]
     except Exception:
         return [DEFAULT_MODEL]
@@ -50,9 +59,11 @@ class OpenRouterClient(BaseLLMClient):
     def get_model_name(self) -> str:
         return self._model
 
-    def generate(self, prompt: str, user_id: str) -> LLMResponse:
-        check_rate_limit(user_id)
-        check_token_limit(user_id, self._max_tokens)
+    def generate(
+        self, prompt: str, user_id: str, bypass_limits: bool = False
+    ) -> LLMResponse:
+        check_rate_limit(user_id, bypass_limits)
+        check_token_limit(user_id, self._max_tokens, bypass_limits)
 
         try:
             response = self._client.invoke(prompt)

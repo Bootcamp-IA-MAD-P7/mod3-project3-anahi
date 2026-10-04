@@ -34,9 +34,11 @@ class GroqClient(BaseLLMClient):
     def get_model_name(self) -> str:
         return self._model
 
-    def generate(self, prompt: str, user_id: str) -> LLMResponse:
-        check_rate_limit(user_id)
-        check_token_limit(user_id, self._max_tokens)
+    def generate(
+        self, prompt: str, user_id: str, bypass_limits: bool = False
+    ) -> LLMResponse:
+        check_rate_limit(user_id, bypass_limits)
+        check_token_limit(user_id, self._max_tokens, bypass_limits)
 
         try:
             response = self._client.invoke(prompt)

@@ -11,7 +11,9 @@ class LLMResponse:
 
 class BaseLLMClient(ABC):
     @abstractmethod
-    def generate(self, prompt: str, user_id: str) -> LLMResponse:
+    def generate(
+        self, prompt: str, user_id: str, bypass_limits: bool = False
+    ) -> LLMResponse:
         pass
 
     @abstractmethod

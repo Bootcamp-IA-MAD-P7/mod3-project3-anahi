@@ -4,13 +4,13 @@ from typing import Generator
 from src.llm.base import BaseLLMClient, LLMResponse
 from src.llm.groq import AVAILABLE_MODELS as GROQ_MODELS
 from src.llm.groq import GroqClient
-from src.llm.openrouter import (
+from src.llm.open_router import (
     AVAILABLE_MODELS as OPENROUTER_MODELS,
 )
-from src.llm.openrouter import (
+from src.llm.open_router import (
     DEFAULT_MODEL as OPENROUTER_DEFAULT,
 )
-from src.llm.openrouter import (
+from src.llm.open_router import (
     OpenRouterClient,
 )
 
@@ -45,14 +45,16 @@ def run_with_fallback(
 ) -> Generator[FallbackUpdate, None, None]:
     groq_cascade = _build_groq_cascade(selected_model)
     openrouter_cascade = _build_openrouter_cascade()
+    bypass_limits = False
 
     for model in groq_cascade:
         try:
             client: BaseLLMClient = GroqClient(model=model)
-            result = client.generate(prompt, user_id)
+            result = client.generate(prompt, user_id, bypass_limits)
             yield FallbackUpdate(status=f"Generated with {model}", result=result)
             return
         except Exception:
+            bypass_limits = True
             next_model = _get_next(groq_cascade, openrouter_cascade, model)
             yield FallbackUpdate(
                 status=f"Model {model} unavailable, trying {next_model}..."
@@ -61,10 +63,11 @@ def run_with_fallback(
     for model in openrouter_cascade:
         try:
             client = OpenRouterClient(model=model)
-            result = client.generate(prompt, user_id)
+            result = client.generate(prompt, user_id, bypass_limits)
             yield FallbackUpdate(status=f"Generated with {model}", result=result)
             return
         except Exception:
+            bypass_limits = True
             next_model = _get_next([], openrouter_cascade, model)
             yield FallbackUpdate(
                 status=f"Model {model} unavailable, trying {next_model}..."
