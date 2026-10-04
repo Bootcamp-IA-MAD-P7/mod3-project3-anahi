@@ -76,9 +76,11 @@ def get_user_stats(user_id: str) -> dict:
     one_minute_ago = now - timedelta(minutes=1)
     recent = [t for t in _request_log[user_id] if t > one_minute_ago]
 
-    return {
+    stats = {
         "requests_this_minute": len(recent),
         "requests_today": len(_request_log[user_id]),
-        "tokens_used_today": _token_log[user_id],
-        "tokens_remaining_today": MAX_TOKENS_PER_DAY - _token_log[user_id],
     }
+    if _token_log[user_id] > 0:
+        stats["tokens_used_today"] = _token_log[user_id]
+        stats["tokens_remaining_today"] = MAX_TOKENS_PER_DAY - _token_log[user_id]
+    return stats
