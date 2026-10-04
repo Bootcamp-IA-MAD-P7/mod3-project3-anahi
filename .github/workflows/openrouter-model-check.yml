@@ -1,0 +1,120 @@
+name: OpenRouter model check
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  live-model-check:
+    runs-on: ubuntu-latest
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      RUN_LIVE_LLM_TESTS: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.13"
+      - run: uv sync
+      - name: Run live model tests
+        id: live-tests
+        run: |
+          attempt=1
+          while :; do
+            status=0
+            uv run pytest tests/integration/test_openrouter.py -m live \
+              --junitxml=report.xml || status=$?
+            if [ "$status" -eq 0 ]; then
+              exit 0
+            fi
+            if [ "$status" -ne 1 ] || [ "$attempt" -ge 2 ]; then
+              exit "$status"
+            fi
+            attempt=$((attempt + 1))
+            sleep 3
+          done
+      - name: Open issue on failure
+        if: failure() && steps.live-tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv run python - <<'PY' > issue.md
+          import re
+          import xml.etree.ElementTree as ET
+
+          tree = ET.parse("report.xml")
+          failed = []
+          for case in tree.iter("testcase"):
+              if case.find("failure") is None and case.find("error") is None:
+                  continue
+              name = case.get("name", "")
+              match = re.search(r"\[(.+)\]", name)
+              failed.append(match.group(1) if match else name)
+
+          lines = [
+              "The daily live OpenRouter model check failed.",
+              "",
+              "Models that failed generation:",
+          ]
+          lines += [f"- {model}" for model in failed]
+          lines += [
+              "",
+              "Free model availability: https://openrouter.ai/models?q=:free",
+          ]
+          print("\n".join(lines))
+          PY
+          gh issue create \
+            --title "Daily OpenRouter model check failed" \
+            --body-file issue.md
+      - name: Open models to block issue
+        if: failure() && steps.live-tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uv run python - <<'PY' > issue.md
+          import re
+          import xml.etree.ElementTree as ET
+
+          tree = ET.parse("report.xml")
+          blocked = []
+          for case in tree.iter("testcase"):
+              node = case.find("failure")
+              if node is None:
+                  node = case.find("error")
+              if node is None:
+                  continue
+              blob = f"{node.get('message', '')} {node.text or ''}"
+              if not re.search(r"Error code: 403|'code': 403|\"code\": 403", blob):
+                  continue
+              match = re.search(r"\[(.+)\]", case.get("name", ""))
+              if match:
+                  blocked.append(match.group(1))
+
+          if not blocked:
+              raise SystemExit(0)
+
+          lines = [
+              "The daily live OpenRouter model check found models that reject",
+              "plain chat with a 403 error:",
+              "",
+              "Models to block:",
+          ]
+          lines += [f"- {model}" for model in blocked]
+          lines += [
+              "",
+              "Add these model ids to BLOCKED_MODELS in src/llm/open_router.py"
+              " and they will be excluded from future runs",
+          ]
+          print("\n".join(lines))
+          PY
+          if [ -s issue.md ]; then
+            gh issue create \
+              --title "OpenRouter models to block" \
+              --body-file issue.md
+          fi
