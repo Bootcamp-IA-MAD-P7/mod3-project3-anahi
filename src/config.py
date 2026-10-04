@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     groq_api_key: str
+    openrouter_api_key: str
 
 
 def get_settings(env_file: str | None = ".env") -> Settings:
