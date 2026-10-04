@@ -23,7 +23,9 @@ jobs:
       - run: uv sync
       - name: Run live model tests
         id: live-tests
-        run: uv run pytest tests/integration/ -m live --junitxml=report.xml
+        run: >-
+          uv run pytest tests/integration/test_groq.py -m live
+          --junitxml=report.xml
       - name: Open issue on failure
         if: failure() && steps.live-tests.outcome == 'failure'
         env:
