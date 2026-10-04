@@ -1,4 +1,5 @@
-from langchain_groq import ChatGroq
+import requests
+from langchain_openai import ChatOpenAI
 
 from src.config import get_settings
 from src.llm.base import BaseLLMClient, LLMResponse
@@ -9,24 +10,48 @@ from src.llm.security import (
     register_request,
 )
 
-DEFAULT_MODEL = "openai/gpt-oss-120b"
+DEFAULT_MODEL = "inclusionai/ling-3.0-flash-sante:free"
 
-AVAILABLE_MODELS = [
-    "openai/gpt-oss-120b",
-    "openai/gpt-oss-20b",
-    "qwen/qwen3.8-27b",
-]
+BLOCKED_MODELS = {
+    "thinkingmachines/inkling:free",
+    "thinkingmachines/inkling-small:free",
+}
 
 
-class GroqClient(BaseLLMClient):
+def get_available_models() -> list[str]:
+    try:
+        settings = get_settings()
+        response = requests.get(
+            "https://openrouter.ai/api/v1/models",
+            headers={"Authorization": f"Bearer {settings.openrouter_api_key}"},
+            timeout=10,
+        )
+        if not response.ok:
+            return [DEFAULT_MODEL]
+        data = response.json()
+        models = [
+            m["id"]
+            for m in data["data"]
+            if ":free" in m["id"] and m["id"] not in BLOCKED_MODELS
+        ]
+        return models if models else [DEFAULT_MODEL]
+    except Exception:
+        return [DEFAULT_MODEL]
+
+
+AVAILABLE_MODELS = get_available_models()
+
+
+class OpenRouterClient(BaseLLMClient):
     def __init__(
         self, model: str = DEFAULT_MODEL, max_tokens: int = MAX_TOKENS_PER_CALL
     ):
         settings = get_settings()
         self._model = model
         self._max_tokens = max_tokens
-        self._client = ChatGroq(
-            api_key=settings.groq_api_key,
+        self._client = ChatOpenAI(
+            api_key=settings.openrouter_api_key,
+            base_url="https://openrouter.ai/api/v1",
             model=model,
             max_tokens=max_tokens,
         )
@@ -51,4 +76,4 @@ class GroqClient(BaseLLMClient):
                 model_name=self._model,
             )
         except Exception as e:
-            raise RuntimeError(f"Groq model {self._model} failed: {e}") from e
+            raise RuntimeError(f"OpenRouter model {self._model} failed: {e}") from e
