@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from langchain_core.messages import HumanMessage
 
 from src.llm.groq import AVAILABLE_MODELS, GroqClient
 
@@ -17,7 +18,9 @@ pytestmark = [
 def test_generate_returns_text(model: str) -> None:
     client = GroqClient(model=model)
 
-    response = client.generate("Say hello in one sentence", user_id="test-user")
+    response = client.generate(
+        [HumanMessage(content="Say hello in one sentence")], user_id="test-user"
+    )
 
     assert response.text.strip()
     assert response.tokens_used > 0

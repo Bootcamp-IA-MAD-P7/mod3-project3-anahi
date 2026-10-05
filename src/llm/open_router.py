@@ -1,4 +1,5 @@
 import requests
+from langchain_core.messages import BaseMessage
 from langchain_openai import ChatOpenAI
 
 from src.config import get_settings
@@ -60,7 +61,7 @@ class OpenRouterClient(BaseLLMClient):
         return self._model
 
     def generate(
-        self, prompt: str, user_id: str, bypass_limits: bool = False
+        self, prompt: list[BaseMessage], user_id: str, bypass_limits: bool = False
     ) -> LLMResponse:
         check_rate_limit(user_id, bypass_limits)
         check_token_limit(user_id, self._max_tokens, bypass_limits)
