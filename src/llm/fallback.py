@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Generator
 
+from langchain_core.messages import BaseMessage
+
 from src.llm.base import BaseLLMClient, LLMResponse
 from src.llm.groq import AVAILABLE_MODELS as GROQ_MODELS
 from src.llm.groq import GroqClient
@@ -43,7 +45,7 @@ def _build_openrouter_cascade(selected_model: str | None = None) -> list[str]:
 
 def run_with_fallback(
     selected_model: str,
-    prompt: str,
+    prompt: list[BaseMessage],
     user_id: str,
     provider: str = "groq",
 ) -> Generator[FallbackUpdate, None, None]:
