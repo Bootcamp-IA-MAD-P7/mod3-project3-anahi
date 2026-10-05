@@ -10,8 +10,9 @@ class ContentState(TypedDict):
     language: str
     model: str
     provider: Provider
-    rag_enabled: bool
     image_enabled: bool
+    rag_enabled: bool
+    citations_enabled: bool
     user_context: str
     rag_context: str
     generated_text: str
