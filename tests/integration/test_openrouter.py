@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from langchain_core.messages import HumanMessage
 
 from src.llm.base import LLMResponse
 from src.llm.open_router import (
@@ -32,7 +33,9 @@ def test_generate_returns_llm_response(model: str) -> None:
     client = OpenRouterClient(model=model)
 
     result = client.generate(
-        "Say hello in one sentence", user_id="test-user", bypass_limits=True
+        [HumanMessage(content="Say hello in one sentence")],
+        user_id="test-user",
+        bypass_limits=True,
     )
 
     assert isinstance(result, LLMResponse)

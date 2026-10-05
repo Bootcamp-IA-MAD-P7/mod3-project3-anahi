@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+from langchain_core.messages import BaseMessage
+
 
 @dataclass
 class LLMResponse:
@@ -12,7 +14,7 @@ class LLMResponse:
 class BaseLLMClient(ABC):
     @abstractmethod
     def generate(
-        self, prompt: str, user_id: str, bypass_limits: bool = False
+        self, prompt: list[BaseMessage], user_id: str, bypass_limits: bool = False
     ) -> LLMResponse:
         pass
 
