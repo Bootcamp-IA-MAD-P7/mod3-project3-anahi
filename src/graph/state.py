@@ -12,7 +12,7 @@ class ContentState(TypedDict):
     provider: Provider
     rag_enabled: bool
     image_enabled: bool
-    company_context: str
+    user_context: str
     rag_context: str
     generated_text: str
     image_data: bytes | None
