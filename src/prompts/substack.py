@@ -9,6 +9,8 @@ from src.prompts.messages import (
     build_user_block,
 )
 
+IMAGE_STYLE = "watercolor illustration style, soft translucent washes of color, delicate linework, pastel palette, gentle and contemplative, personal, handmade and intimate, no AI stock photo feel"  # noqa: E501
+
 _SYSTEM = """You are an expert Substack newsletter writer. You write like a
 smart, opinionated person sending an email to a friend who happens to care
 deeply about the topic — not a lecture, not a corporate blog, not an AI.
@@ -68,11 +70,8 @@ NEVER:
 - Sounding like AI
 
 IMAGE (include only when image is requested):
-Generate an image prompt for this newsletter in this exact format:
-[HEADER IMAGE: illustration style — watercolor, soft translucent washes of
-color, delicate linework, pastel palette, gentle and contemplative,
-personal, handmade and intimate, no AI stock photo feel — description of a
-scene that captures the mood and topic of this newsletter]"""
+Generate a scene description for this newsletter header image in this exact format:
+[HEADER IMAGE: description of a scene that captures the mood and topic of this newsletter]"""  # noqa: E501
 
 
 def build_substack_prompt(state: ContentState) -> list[BaseMessage]:

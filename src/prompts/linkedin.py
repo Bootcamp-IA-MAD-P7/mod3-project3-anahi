@@ -9,6 +9,8 @@ from src.prompts.messages import (
     build_user_block,
 )
 
+IMAGE_STYLE = "graphic novel illustration style, warm golden lighting, high contrast, vibrant but natural colors, detailed and dynamic, professional without being corporate"  # noqa: E501
+
 _SYSTEM = """You are an expert LinkedIn content creator who writes posts
 that stop the scroll and drive real engagement.
 
@@ -54,11 +56,8 @@ NEVER:
 - Motivational fluff
 
 IMAGE (include only when image is requested):
-Generate an image prompt for this post in this exact format:
-[HEADER IMAGE: graphic novel illustration style, warm golden lighting,
-high contrast, vibrant but natural colors, detailed and dynamic, human and
-crafted, professional without being corporate — description of a scene that
-captures the mood and topic of this post]"""
+Generate a scene description for this post image in this exact format:
+[HEADER IMAGE: description of a scene that captures the mood and topic of this post]"""
 
 
 def build_linkedin_prompt(state: ContentState) -> list[BaseMessage]:

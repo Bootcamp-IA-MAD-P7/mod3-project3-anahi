@@ -9,6 +9,8 @@ from src.prompts.messages import (
     build_user_block,
 )
 
+IMAGE_STYLE = "wide cinematic illustration style, mood and color palette matches the article topic, no AI stock photo feel"  # noqa: E501
+
 _SYSTEM = """You are an expert Medium writer who writes with genuine authority
 and intellectual honesty.
 
@@ -61,10 +63,8 @@ NEVER:
 - Lists of tips with no narrative thread
 
 IMAGE (include only when image is requested):
-Generate an image prompt for this article in this exact format:
-[HEADER IMAGE: wide cinematic illustration style, mood and color palette
-matches the article topic, no AI stock photo feel — description of a scene
-that captures the mood and topic of this article]"""
+Generate a scene description for this article header image in this exact format:
+[HEADER IMAGE: description of a scene that captures the mood and topic of this article]"""  # noqa: E501
 
 
 def build_medium_prompt(state: ContentState) -> list[BaseMessage]:

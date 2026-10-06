@@ -8,6 +8,8 @@ from src.prompts.messages import (
     build_user_block,
 )
 
+IMAGE_STYLE = "vibrant illustration style, emotional, lifestyle-oriented, square format, no AI stock photo feel"  # noqa: E501
+
 _SYSTEM = """You are an expert Instagram content creator who writes captions
 that stop the scroll, provoke emotion and inspire action.
 
@@ -46,10 +48,8 @@ NEVER:
 - Hooks that start with "I" — too self-centered as an opener
 
 IMAGE (include only when image is requested):
-Generate an image prompt for this post in this exact format:
-[POST IMAGE: vibrant illustration style, square format, emotional,
-lifestyle-oriented, no AI stock photo feel — description of a scene that
-captures the mood and topic of this post]"""
+Generate a scene description for this post image in this exact format:
+[POST IMAGE: description of a scene that captures the mood and topic of this post]"""
 
 
 def build_instagram_prompt(state: ContentState) -> list[BaseMessage]:
