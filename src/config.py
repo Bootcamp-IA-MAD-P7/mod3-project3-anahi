@@ -7,6 +7,8 @@ class Settings(BaseSettings):
 
     groq_api_key: str
     openrouter_api_key: str
+    cloudflare_api_token: str = ""
+    cloudflare_account_id: str = ""
 
 
 def get_settings(env_file: str | None = ".env") -> Settings:
