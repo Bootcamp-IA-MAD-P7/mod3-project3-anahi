@@ -149,8 +149,9 @@ class TestImageBlock:
     )
     def test_includes_header_image_when_enabled(self, platform):
         state = base_state(platform=platform, image_enabled=True)
-        human = BUILDERS[platform](state)[1].content
-        assert "[HEADER IMAGE:" in human
+        messages = BUILDERS[platform](state)
+        assert "IMAGE instructions in the system message" in messages[1].content
+        assert "[HEADER IMAGE:" in messages[0].content
 
     @pytest.mark.parametrize(
         "platform",

@@ -51,7 +51,14 @@ NEVER:
 - Broad tips with no clear angle
 - Generic advice that applies to everything
 - Lack of a specific perspective or point of view
-- Motivational fluff"""
+- Motivational fluff
+
+IMAGE (include only when image is requested):
+Generate an image prompt for this post in this exact format:
+[HEADER IMAGE: graphic novel illustration style, warm golden lighting,
+high contrast, vibrant but natural colors, detailed and dynamic, human and
+crafted, professional without being corporate — description of a scene that
+captures the mood and topic of this post]"""
 
 
 def build_linkedin_prompt(state: ContentState) -> list[BaseMessage]:
@@ -66,6 +73,12 @@ def build_linkedin_prompt(state: ContentState) -> list[BaseMessage]:
 
     if state["rag_enabled"]:
         parts.append(build_rag_block(state["rag_context"]))
+
+    if state["image_enabled"]:
+        parts.append(
+            "Include an image prompt following the IMAGE instructions "
+            "in the system message"
+        )
 
     human = build_human_message(parts)
     return [system, human]

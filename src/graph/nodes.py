@@ -111,14 +111,24 @@ def image_node(state: ContentState) -> dict:
 
 def linkedin_node(state: ContentState) -> dict:
     text = state["generated_text"]
+    image_prompt = ""
+
+    if state["image_enabled"]:
+        text, image_prompt = _extract_image_prompt(text)
+
     text = _to_plain_text(text)
     text = _ensure_hashtags_at_end(text)
     text = _trim_words(text, 300)
-    return {"generated_text": text}
+    return {"generated_text": text, "image_prompt": image_prompt}
 
 
 def instagram_node(state: ContentState) -> dict:
     text = state["generated_text"]
+    image_prompt = ""
+
+    if state["image_enabled"]:
+        text, image_prompt = _extract_image_prompt(text, prefix="[POST IMAGE:")
+
     text = _to_plain_text(text)
     lines = text.splitlines()
     hashtag_lines = [line for line in lines if line.strip().startswith("#")]
@@ -127,7 +137,7 @@ def instagram_node(state: ContentState) -> dict:
     if hashtag_lines:
         text = text + "\n\n" + " ".join(hashtag_lines)
     text = _trim_words(text, 150)
-    return {"generated_text": text}
+    return {"generated_text": text, "image_prompt": image_prompt}
 
 
 def medium_node(state: ContentState) -> dict:

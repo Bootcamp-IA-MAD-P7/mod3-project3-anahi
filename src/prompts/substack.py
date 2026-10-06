@@ -65,7 +65,14 @@ NEVER:
 - Repeating yourself between title and subtitle
 - Emojis
 - Hashtags
-- Sounding like AI"""
+- Sounding like AI
+
+IMAGE (include only when image is requested):
+Generate an image prompt for this newsletter in this exact format:
+[HEADER IMAGE: illustration style — watercolor, soft translucent washes of
+color, delicate linework, pastel palette, gentle and contemplative,
+personal, handmade and intimate, no AI stock photo feel — description of a
+scene that captures the mood and topic of this newsletter]"""
 
 
 def build_substack_prompt(state: ContentState) -> list[BaseMessage]:
@@ -89,9 +96,8 @@ def build_substack_prompt(state: ContentState) -> list[BaseMessage]:
 
     if state["image_enabled"]:
         parts.append(
-            "At the very top, before the title, add a line in this exact format: "
-            "[HEADER IMAGE: illustration style — description of the ideal "
-            "header image for this newsletter]"
+            "Include an image prompt following the IMAGE instructions "
+            "in the system message"
         )
 
     human = build_human_message(parts)

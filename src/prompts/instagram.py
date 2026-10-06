@@ -43,7 +43,13 @@ HASHTAGS (after the caption, separated by a line break):
 NEVER:
 - Overused phrases: "hustle", "grind", "level up", "game changer"
 - More than 15 hashtags
-- Hooks that start with "I" — too self-centered as an opener"""
+- Hooks that start with "I" — too self-centered as an opener
+
+IMAGE (include only when image is requested):
+Generate an image prompt for this post in this exact format:
+[POST IMAGE: vibrant illustration style, square format, emotional,
+lifestyle-oriented, no AI stock photo feel — description of a scene that
+captures the mood and topic of this post]"""
 
 
 def build_instagram_prompt(state: ContentState) -> list[BaseMessage]:
@@ -55,6 +61,12 @@ def build_instagram_prompt(state: ContentState) -> list[BaseMessage]:
         build_language_instruction(state["language"]),
         build_user_block(state["user_context"]),
     ]
+
+    if state["image_enabled"]:
+        parts.append(
+            "Include an image prompt following the IMAGE instructions "
+            "in the system message"
+        )
 
     human = build_human_message(parts)
     return [system, human]
