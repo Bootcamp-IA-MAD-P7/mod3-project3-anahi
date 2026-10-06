@@ -17,4 +17,5 @@ class ContentState(TypedDict):
     rag_context: str
     generated_text: str
     image_data: bytes | None
+    image_prompt: str
     status_messages: list[str]
