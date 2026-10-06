@@ -1,7 +1,7 @@
 from langchain_core.messages import BaseMessage
 
 from src.graph.state import ContentState
-from src.prompts.base import (
+from src.prompts.messages import (
     build_human_message,
     build_language_instruction,
     build_system_message,
