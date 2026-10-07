@@ -1,7 +1,57 @@
+from markdown_it import MarkdownIt
+from markdownify import markdownify
+
+from src.chains.image_fallback import run_image_with_fallback
 from src.graph.enums import Platform
 from src.graph.state import ContentState
 from src.llm.fallback import run_with_fallback
 from src.prompts.base import build_prompt
+from src.prompts.instagram import IMAGE_STYLE as INSTAGRAM_IMAGE_STYLE
+from src.prompts.linkedin import IMAGE_STYLE as LINKEDIN_IMAGE_STYLE
+from src.prompts.medium import IMAGE_STYLE as MEDIUM_IMAGE_STYLE
+from src.prompts.substack import IMAGE_STYLE as SUBSTACK_IMAGE_STYLE
+
+_md = MarkdownIt()
+
+
+def _to_plain_text(text: str) -> str:
+    return markdownify(text).strip()
+
+
+def _extract_image_prompt(text: str, prefix: str = "[HEADER IMAGE:") -> tuple[str, str]:
+    lines = text.splitlines()
+    image_prompt = ""
+    filtered_lines = []
+    for line in lines:
+        if line.strip().startswith(prefix):
+            image_prompt = line.strip()[len(prefix) :].rstrip("]").strip()
+        else:
+            filtered_lines.append(line)
+    return "\n".join(filtered_lines).strip(), image_prompt
+
+
+def _ensure_hashtags_at_end(text: str) -> str:
+    lines = text.splitlines()
+    hashtag_lines = [
+        line
+        for line in lines
+        if line.strip().startswith("#") and not line.strip().startswith("##")
+    ]
+    non_hashtag_lines = [
+        line
+        for line in lines
+        if not (line.strip().startswith("#") and not line.strip().startswith("##"))
+    ]
+    if hashtag_lines:
+        return "\n".join(non_hashtag_lines).strip() + "\n\n" + " ".join(hashtag_lines)
+    return text
+
+
+def _trim_words(text: str, max_words: int) -> str:
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    return " ".join(words[:max_words])
 
 
 def router_node(state: ContentState) -> dict:
@@ -29,6 +79,13 @@ def router_node(state: ContentState) -> dict:
 
 
 _DEFAULT_USER_ID = "default-user"
+
+_PLATFORM_IMAGE_STYLES = {
+    Platform.LINKEDIN: LINKEDIN_IMAGE_STYLE,
+    Platform.INSTAGRAM: INSTAGRAM_IMAGE_STYLE,
+    Platform.MEDIUM: MEDIUM_IMAGE_STYLE,
+    Platform.SUBSTACK: SUBSTACK_IMAGE_STYLE,
+}
 
 
 def llm_node(state: ContentState) -> dict:
@@ -60,21 +117,86 @@ def rag_node(state: ContentState) -> dict:
     raise NotImplementedError
 
 
-def image_node(state: ContentState) -> dict:
-    raise NotImplementedError
+async def image_node(state: ContentState) -> dict:
+    platform = state["platform"]
+    topic = state["topic"]
+    image_style = _PLATFORM_IMAGE_STYLES[platform]
+    status_messages = list(state["status_messages"])
+
+    prompt = f"{image_style} — {state['image_prompt']}, topic: {topic}"
+
+    image_data = None
+    async for update in run_image_with_fallback(
+        prompt=prompt,
+        platform=platform,
+        user_id=_DEFAULT_USER_ID,
+    ):
+        status_messages.append(update.status)
+        if update.result is not None:
+            image_data = update.result
+        if update.is_last:
+            status_messages.append("You've reached your daily image limit")
+
+    return {
+        "image_data": image_data,
+        "status_messages": status_messages,
+    }
 
 
 def linkedin_node(state: ContentState) -> dict:
-    raise NotImplementedError
+    text = state["generated_text"]
+    image_prompt = ""
+
+    if state["image_enabled"]:
+        text, image_prompt = _extract_image_prompt(text)
+
+    text = _to_plain_text(text)
+    text = _ensure_hashtags_at_end(text)
+    text = _trim_words(text, 300)
+    return {"generated_text": text, "image_prompt": image_prompt}
 
 
 def instagram_node(state: ContentState) -> dict:
-    raise NotImplementedError
+    text = state["generated_text"]
+    image_prompt = ""
+
+    if state["image_enabled"]:
+        text, image_prompt = _extract_image_prompt(text, prefix="[POST IMAGE:")
+
+    text = _to_plain_text(text)
+    lines = text.splitlines()
+    hashtag_lines = [line for line in lines if line.strip().startswith("#")]
+    non_hashtag_lines = [line for line in lines if not line.strip().startswith("#")]
+    text = "\n".join(non_hashtag_lines).strip()
+    if hashtag_lines:
+        text = text + "\n\n" + " ".join(hashtag_lines)
+    text = _trim_words(text, 150)
+    return {"generated_text": text, "image_prompt": image_prompt}
 
 
 def medium_node(state: ContentState) -> dict:
-    raise NotImplementedError
+    text = state["generated_text"]
+    image_prompt = ""
+
+    if state["image_enabled"]:
+        text, image_prompt = _extract_image_prompt(text)
+
+    return {
+        "generated_text": text,
+        "image_prompt": image_prompt,
+    }
 
 
 def substack_node(state: ContentState) -> dict:
-    raise NotImplementedError
+    text = state["generated_text"]
+    image_prompt = ""
+
+    if state["image_enabled"]:
+        text, image_prompt = _extract_image_prompt(
+            text, prefix="[HEADER IMAGE: illustration style —"
+        )
+
+    return {
+        "generated_text": text,
+        "image_prompt": image_prompt,
+    }
