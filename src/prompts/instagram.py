@@ -45,11 +45,7 @@ HASHTAGS (after the caption, separated by a line break):
 NEVER:
 - Overused phrases: "hustle", "grind", "level up", "game changer"
 - More than 15 hashtags
-- Hooks that start with "I" — too self-centered as an opener
-
-IMAGE (include only when image is requested):
-Generate a scene description for this post image in this exact format:
-[POST IMAGE: description of a scene that captures the mood and topic of this post]"""
+- Hooks that start with "I" — too self-centered as an opener"""
 
 
 def build_instagram_prompt(state: ContentState) -> list[BaseMessage]:
@@ -64,8 +60,9 @@ def build_instagram_prompt(state: ContentState) -> list[BaseMessage]:
 
     if state["image_enabled"]:
         parts.append(
-            "Include an image prompt following the IMAGE instructions "
-            "in the system message"
+            "Include a scene description for the post image in this exact format:\n"
+            "[POST IMAGE: description of a scene that captures the mood and "
+            "topic of this post]"
         )
 
     human = build_human_message(parts)

@@ -67,11 +67,7 @@ NEVER:
 - Repeating yourself between title and subtitle
 - Emojis
 - Hashtags
-- Sounding like AI
-
-IMAGE (include only when image is requested):
-Generate a scene description for this newsletter header image in this exact format:
-[HEADER IMAGE: description of a scene that captures the mood and topic of this newsletter]"""  # noqa: E501
+- Sounding like AI"""
 
 
 def build_substack_prompt(state: ContentState) -> list[BaseMessage]:
@@ -95,8 +91,10 @@ def build_substack_prompt(state: ContentState) -> list[BaseMessage]:
 
     if state["image_enabled"]:
         parts.append(
-            "Include an image prompt following the IMAGE instructions "
-            "in the system message"
+            "Include a scene description for the newsletter header image "
+            "in this exact format:\n"
+            "[HEADER IMAGE: description of a scene that captures the mood "
+            "and topic of this newsletter]"
         )
 
     human = build_human_message(parts)

@@ -60,11 +60,7 @@ NEVER:
 - Overused openings: "In today's world...", "In this article...", "As we all know..."
 - Emojis
 - Hashtags
-- Lists of tips with no narrative thread
-
-IMAGE (include only when image is requested):
-Generate a scene description for this article header image in this exact format:
-[HEADER IMAGE: description of a scene that captures the mood and topic of this article]"""  # noqa: E501
+- Lists of tips with no narrative thread"""
 
 
 def build_medium_prompt(state: ContentState) -> list[BaseMessage]:
@@ -88,8 +84,10 @@ def build_medium_prompt(state: ContentState) -> list[BaseMessage]:
 
     if state["image_enabled"]:
         parts.append(
-            "Include an image prompt following the IMAGE instructions "
-            "in the system message"
+            "Include a scene description for the article header image "
+            "in this exact format:\n"
+            "[HEADER IMAGE: description of a scene that captures the mood "
+            "and topic of this article]"
         )
 
     human = build_human_message(parts)

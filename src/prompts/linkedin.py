@@ -53,11 +53,7 @@ NEVER:
 - Broad tips with no clear angle
 - Generic advice that applies to everything
 - Lack of a specific perspective or point of view
-- Motivational fluff
-
-IMAGE (include only when image is requested):
-Generate a scene description for this post image in this exact format:
-[HEADER IMAGE: description of a scene that captures the mood and topic of this post]"""
+- Motivational fluff"""
 
 
 def build_linkedin_prompt(state: ContentState) -> list[BaseMessage]:
@@ -75,8 +71,9 @@ def build_linkedin_prompt(state: ContentState) -> list[BaseMessage]:
 
     if state["image_enabled"]:
         parts.append(
-            "Include an image prompt following the IMAGE instructions "
-            "in the system message"
+            "Include a scene description for the post image in this exact format:\n"
+            "[HEADER IMAGE: description of a scene that captures the mood and "
+            "topic of this post]"
         )
 
     human = build_human_message(parts)

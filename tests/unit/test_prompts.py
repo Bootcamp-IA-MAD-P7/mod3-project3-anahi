@@ -150,8 +150,9 @@ class TestImageBlock:
     def test_includes_header_image_when_enabled(self, platform):
         state = base_state(platform=platform, image_enabled=True)
         messages = BUILDERS[platform](state)
-        assert "IMAGE instructions in the system message" in messages[1].content
-        assert "[HEADER IMAGE:" in messages[0].content
+        assert "Include a scene description" in messages[1].content
+        assert "[HEADER IMAGE:" in messages[1].content
+        assert "[HEADER IMAGE:" not in messages[0].content
 
     @pytest.mark.parametrize(
         "platform",
