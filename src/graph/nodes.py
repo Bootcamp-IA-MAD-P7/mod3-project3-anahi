@@ -1,10 +1,15 @@
 from markdown_it import MarkdownIt
 from markdownify import markdownify
 
+from src.chains.image_fallback import run_image_with_fallback
 from src.graph.enums import Platform
 from src.graph.state import ContentState
 from src.llm.fallback import run_with_fallback
 from src.prompts.base import build_prompt
+from src.prompts.instagram import IMAGE_STYLE as INSTAGRAM_IMAGE_STYLE
+from src.prompts.linkedin import IMAGE_STYLE as LINKEDIN_IMAGE_STYLE
+from src.prompts.medium import IMAGE_STYLE as MEDIUM_IMAGE_STYLE
+from src.prompts.substack import IMAGE_STYLE as SUBSTACK_IMAGE_STYLE
 
 _md = MarkdownIt()
 
@@ -75,6 +80,13 @@ def router_node(state: ContentState) -> dict:
 
 _DEFAULT_USER_ID = "default-user"
 
+_PLATFORM_IMAGE_STYLES = {
+    Platform.LINKEDIN: LINKEDIN_IMAGE_STYLE,
+    Platform.INSTAGRAM: INSTAGRAM_IMAGE_STYLE,
+    Platform.MEDIUM: MEDIUM_IMAGE_STYLE,
+    Platform.SUBSTACK: SUBSTACK_IMAGE_STYLE,
+}
+
 
 def llm_node(state: ContentState) -> dict:
     messages = build_prompt(state)
@@ -105,8 +117,30 @@ def rag_node(state: ContentState) -> dict:
     raise NotImplementedError
 
 
-def image_node(state: ContentState) -> dict:
-    raise NotImplementedError
+async def image_node(state: ContentState) -> dict:
+    platform = state["platform"]
+    topic = state["topic"]
+    image_style = _PLATFORM_IMAGE_STYLES[platform]
+    status_messages = list(state["status_messages"])
+
+    prompt = f"{image_style} — {state['image_prompt']}, topic: {topic}"
+
+    image_data = None
+    async for update in run_image_with_fallback(
+        prompt=prompt,
+        platform=platform,
+        user_id=_DEFAULT_USER_ID,
+    ):
+        status_messages.append(update.status)
+        if update.result is not None:
+            image_data = update.result
+        if update.is_last:
+            status_messages.append("You've reached your daily image limit")
+
+    return {
+        "image_data": image_data,
+        "status_messages": status_messages,
+    }
 
 
 def linkedin_node(state: ContentState) -> dict:
