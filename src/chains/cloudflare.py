@@ -1,6 +1,6 @@
 import httpx
 
-from src.chains.security import (
+from src.chains.image_security import (
     check_account_limit,
     check_image_rate_limit,
     register_image_request,
@@ -37,7 +37,7 @@ async def _post_to_cloudflare(
     api_token: str,
 ) -> bytes | None:
     url = _CLOUDFLARE_URL.format(account_id=account_id)
-    async with httpx.AsyncClient(timeout=60) as client:
+    async with httpx.AsyncClient(timeout=150) as client:
         response = await client.post(
             url,
             headers={
