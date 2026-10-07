@@ -63,3 +63,4 @@ def build_graph() -> CompiledStateGraph:
 
 
 graph = build_graph()
+# invoke with await graph.ainvoke() — image_node is async
