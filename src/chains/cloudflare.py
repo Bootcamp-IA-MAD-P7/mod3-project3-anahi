@@ -16,8 +16,7 @@ DIMENSIONS: dict[Platform, tuple[int, int]] = {
 }
 
 _CLOUDFLARE_URL = (
-    "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run"
-    "/@cf/black-forest-labs/flux-1-schnell"
+    "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{model}"
 )
 
 
@@ -35,8 +34,9 @@ async def _post_to_cloudflare(
     height: int,
     account_id: str,
     api_token: str,
+    model: str,
 ) -> bytes | None:
-    url = _CLOUDFLARE_URL.format(account_id=account_id)
+    url = _CLOUDFLARE_URL.format(account_id=account_id, model=model)
     async with httpx.AsyncClient(timeout=150) as client:
         response = await client.post(
             url,
@@ -55,7 +55,8 @@ async def _post_to_cloudflare(
 
     if response.status_code == 429:
         raise ImageRateLimitError(
-            "Cloudflare daily image quota exhausted, resets at 00:00 UTC"
+            "Cloudflare daily image quota exhausted, resets at 00:00 UTC. "
+            "Your post will be generated without an image"
         )
 
     if not response.is_success:
@@ -74,6 +75,7 @@ async def generate_image(
     prompt: str,
     platform: Platform,
     user_id: str,
+    model: str = "@cf/black-forest-labs/flux-1-schnell",
 ) -> tuple[bytes, bool]:
     check_account_limit()
     check_image_rate_limit(user_id)
@@ -87,6 +89,7 @@ async def generate_image(
         height=height,
         account_id=settings.cloudflare_account_id,
         api_token=settings.cloudflare_api_token,
+        model=model,
     )
 
     if result is None:
@@ -97,6 +100,7 @@ async def generate_image(
             height=height,
             account_id=settings.cloudflare_account_id,
             api_token=settings.cloudflare_api_token,
+            model=model,
         )
 
     if result is None:
