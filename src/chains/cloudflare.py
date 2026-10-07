@@ -1,3 +1,5 @@
+import base64
+
 import httpx
 
 from src.chains.image_security import (
@@ -19,6 +21,9 @@ _CLOUDFLARE_URL = (
     "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{model}"
 )
 
+_MULTIPART_MODEL = "@cf/black-forest-labs/flux-2-klein-4b"
+_PROMPT_ONLY_MODELS = frozenset({"@cf/black-forest-labs/flux-1-schnell"})
+
 
 class ImageGenerationError(Exception):
     pass
@@ -26,6 +31,20 @@ class ImageGenerationError(Exception):
 
 class ImageRateLimitError(Exception):
     pass
+
+
+def _request_body(prompt: str, width: int, height: int, model: str) -> dict:
+    if model == _MULTIPART_MODEL:
+        return {
+            "files": {
+                "prompt": (None, prompt),
+                "width": (None, str(width)),
+                "height": (None, str(height)),
+            }
+        }
+    if model in _PROMPT_ONLY_MODELS:
+        return {"json": {"prompt": prompt}}
+    return {"json": {"prompt": prompt, "width": width, "height": height}}
 
 
 async def _post_to_cloudflare(
@@ -37,20 +56,15 @@ async def _post_to_cloudflare(
     model: str,
 ) -> bytes | None:
     url = _CLOUDFLARE_URL.format(account_id=account_id, model=model)
+    headers = {
+        "Authorization": f"Bearer {api_token}",
+        "Accept": "image/png",
+    }
     async with httpx.AsyncClient(timeout=150) as client:
         response = await client.post(
             url,
-            headers={
-                "Authorization": f"Bearer {api_token}",
-                "Content-Type": "application/json",
-                "Accept": "image/jpeg",
-            },
-            json={
-                "prompt": prompt,
-                "num_steps": 4,
-                "width": width,
-                "height": height,
-            },
+            headers=headers,
+            **_request_body(prompt, width, height, model),
         )
 
     if response.status_code == 429:
@@ -68,14 +82,20 @@ async def _post_to_cloudflare(
             f"Cloudflare image generation failed with status {response.status_code}"
         )
 
-    return response.content
+    if response.headers.get("content-type", "").startswith("image/"):
+        return response.content
+
+    image_b64 = response.json().get("result", {}).get("image")
+    if not image_b64:
+        return None
+    return base64.b64decode(image_b64)
 
 
 async def generate_image(
     prompt: str,
     platform: Platform,
     user_id: str,
-    model: str = "@cf/black-forest-labs/flux-1-schnell",
+    model: str = "@cf/black-forest-labs/flux-2-klein-4b",
 ) -> tuple[bytes, bool]:
     check_account_limit()
     check_image_rate_limit(user_id)

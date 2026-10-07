@@ -8,8 +8,8 @@ from src.chains.cloudflare import (
 from src.graph.enums import Platform
 
 IMAGE_MODELS = [
-    "@cf/black-forest-labs/flux-1-schnell",
     "@cf/black-forest-labs/flux-2-klein-4b",
+    "@cf/black-forest-labs/flux-1-schnell",
     "@cf/leonardo/phoenix-1.0",
     "@cf/leonardo/lucid-origin",
 ]
