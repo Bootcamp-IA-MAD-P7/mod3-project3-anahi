@@ -24,6 +24,15 @@ PLATFORM_MARKERS = {
 
 PLATFORMS = list(Platform)
 
+MOCK_RAG_CHUNK = {
+    "chunk_text": "source one says X",
+    "paper_id": "2401.00001",
+    "paper_title": "Mock Paper",
+    "authors": "Smith et al.",
+    "arxiv_url": "https://arxiv.org/abs/2401.00001",
+    "similarity": 0.95,
+}
+
 
 def base_state(**overrides):
     defaults = {
@@ -37,7 +46,7 @@ def base_state(**overrides):
         "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
-        "rag_context": "",
+        "rag_context": [],
         "generated_text": "",
         "image_data": None,
         "status_messages": [],
@@ -97,11 +106,13 @@ class TestRagBlock:
         state = base_state(
             platform=platform,
             rag_enabled=True,
-            rag_context="source one says X",
+            rag_context=[MOCK_RAG_CHUNK],
         )
         human = BUILDERS[platform](state)[1].content
         assert "reference material" in human
         assert "source one says X" in human
+        assert "Mock Paper" in human
+        assert "Smith et al." in human
 
     @pytest.mark.parametrize(
         "platform",
@@ -115,7 +126,7 @@ class TestRagBlock:
         state = base_state(
             platform=Platform.INSTAGRAM,
             rag_enabled=True,
-            rag_context="source one says X",
+            rag_context=[MOCK_RAG_CHUNK],
         )
         human = build_instagram_prompt(state)[1].content
         assert "reference material" not in human

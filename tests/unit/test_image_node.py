@@ -19,7 +19,7 @@ def base_state(**overrides):
         "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
-        "rag_context": "",
+        "rag_context": [],
         "generated_text": "some generated text",
         "image_prompt": "a professional at a desk",
         "image_data": None,

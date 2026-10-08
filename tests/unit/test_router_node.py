@@ -14,7 +14,7 @@ def base_state(**overrides):
         "rag_enabled": None,
         "citations_enabled": None,
         "user_context": "",
-        "rag_context": "",
+        "rag_context": [],
         "generated_text": "",
         "image_data": None,
         "status_messages": [],

@@ -67,7 +67,7 @@ def build_linkedin_prompt(state: ContentState) -> list[BaseMessage]:
     ]
 
     if state["rag_enabled"]:
-        parts.append(build_rag_block(state["rag_context"]))
+        parts.append(build_rag_block(state.get("rag_context", [])))
 
     if state["image_enabled"]:
         parts.append(

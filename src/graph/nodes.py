@@ -125,10 +125,6 @@ def llm_node(state: ContentState) -> dict:
     }
 
 
-def rag_node(state: ContentState) -> dict:
-    raise NotImplementedError
-
-
 def arxiv_rag_node(state: ContentState) -> dict:
     user_topic = state["topic"]
     slug = make_topic_slug(user_topic)
@@ -163,6 +159,10 @@ def arxiv_rag_node(state: ContentState) -> dict:
                 f"generating without RAG context. ({type(e).__name__})"
             ),
         }
+
+
+def finance_rag_node(state: ContentState) -> dict:
+    raise NotImplementedError
 
 
 async def image_node(state: ContentState) -> dict:

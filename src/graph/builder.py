@@ -3,12 +3,13 @@ from langgraph.graph.state import CompiledStateGraph
 
 from src.graph.enums import Platform
 from src.graph.nodes import (
+    arxiv_rag_node,
+    finance_rag_node,
     image_node,
     instagram_node,
     linkedin_node,
     llm_node,
     medium_node,
-    rag_node,
     router_node,
     substack_node,
 )
@@ -16,8 +17,13 @@ from src.graph.state import ContentState
 
 
 def _route_after_router(state: ContentState) -> str:
-    if state["rag_enabled"]:
-        return "rag_node"
+    if not state["rag_enabled"]:
+        return "llm_node"
+    platform = state["platform"]
+    if platform in (Platform.MEDIUM, Platform.SUBSTACK):
+        return "arxiv_rag_node"
+    if platform == Platform.LINKEDIN:
+        return "finance_rag_node"
     return "llm_node"
 
 
@@ -41,7 +47,8 @@ def build_graph() -> CompiledStateGraph:
     builder = StateGraph(ContentState)
 
     builder.add_node("router_node", router_node)
-    builder.add_node("rag_node", rag_node)
+    builder.add_node("arxiv_rag_node", arxiv_rag_node)
+    builder.add_node("finance_rag_node", finance_rag_node)
     builder.add_node("llm_node", llm_node)
     builder.add_node("linkedin_node", linkedin_node)
     builder.add_node("instagram_node", instagram_node)
@@ -51,7 +58,8 @@ def build_graph() -> CompiledStateGraph:
 
     builder.add_edge(START, "router_node")
     builder.add_conditional_edges("router_node", _route_after_router)
-    builder.add_edge("rag_node", "llm_node")
+    builder.add_edge("arxiv_rag_node", "llm_node")
+    builder.add_edge("finance_rag_node", "llm_node")
     builder.add_conditional_edges("llm_node", _route_after_llm)
     builder.add_conditional_edges("linkedin_node", _route_after_platform)
     builder.add_conditional_edges("instagram_node", _route_after_platform)

@@ -21,7 +21,7 @@ def base_state(**overrides):
         "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
-        "rag_context": "",
+        "rag_context": [],
         "generated_text": "",
         "image_data": None,
         "status_messages": [],
@@ -30,8 +30,18 @@ def base_state(**overrides):
 
 
 class TestRouteAfterRouter:
-    def test_routes_to_rag_when_enabled(self):
-        assert _route_after_router(base_state(rag_enabled=True)) == "rag_node"
+    @pytest.mark.parametrize(
+        "platform,expected",
+        [
+            (Platform.MEDIUM, "arxiv_rag_node"),
+            (Platform.SUBSTACK, "arxiv_rag_node"),
+            (Platform.LINKEDIN, "finance_rag_node"),
+            (Platform.INSTAGRAM, "llm_node"),
+        ],
+    )
+    def test_routes_to_correct_rag_node_when_enabled(self, platform, expected):
+        state = base_state(platform=platform, rag_enabled=True)
+        assert _route_after_router(state) == expected
 
     def test_routes_to_llm_when_rag_disabled(self):
         assert _route_after_router(base_state(rag_enabled=False)) == "llm_node"

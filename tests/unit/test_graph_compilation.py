@@ -11,7 +11,8 @@ def test_graph_has_expected_nodes():
     node_names = set(graph.nodes.keys())
     expected = {
         "router_node",
-        "rag_node",
+        "arxiv_rag_node",
+        "finance_rag_node",
         "llm_node",
         "linkedin_node",
         "instagram_node",
