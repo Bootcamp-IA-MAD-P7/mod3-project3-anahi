@@ -14,9 +14,11 @@ dependencies = [
     "langgraph>=1.2.12",
     "markdown-it-py>=4.2.0",
     "markdownify>=1.2.3",
+    "psycopg2-binary>=2.9.13",
     "pydantic-settings>=2.15.0",
     "pymupdf>=1.28.2",
     "requests>=2.34.2",
+    "sentence-transformers>=6.1.0",
 ]
 
 [dependency-groups]

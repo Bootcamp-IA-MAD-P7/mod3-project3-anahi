@@ -3,7 +3,7 @@ from typing import Optional  # noqa: F401
 import arxiv
 
 
-def fetch_arxiv_papers(topic: str, max_results: int = 10) -> list[dict]:
+def fetch_arxiv_papers(topic: str, max_results: int = 3) -> list[dict]:
     client = arxiv.Client()
     search = arxiv.Search(
         query=topic, max_results=max_results, sort_by=arxiv.SortCriterion.Relevance
