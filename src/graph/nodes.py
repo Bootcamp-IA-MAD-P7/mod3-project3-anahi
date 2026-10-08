@@ -10,6 +10,18 @@ from src.prompts.instagram import IMAGE_STYLE as INSTAGRAM_IMAGE_STYLE
 from src.prompts.linkedin import IMAGE_STYLE as LINKEDIN_IMAGE_STYLE
 from src.prompts.medium import IMAGE_STYLE as MEDIUM_IMAGE_STYLE
 from src.prompts.substack import IMAGE_STYLE as SUBSTACK_IMAGE_STYLE
+from src.rag.arxiv_fetcher import fetch_arxiv_papers
+from src.rag.chunker import chunk_text
+from src.rag.cleaner import clean_text
+from src.rag.embedder import embed_chunks, model
+from src.rag.pdf_parser import parse_pdf
+from src.rag.store import (
+    find_similar_slug,
+    retrieve_chunks,
+    store_chunks,
+    topic_is_cached,
+)
+from src.rag.utils import make_topic_slug
 
 _md = MarkdownIt()
 
@@ -115,6 +127,42 @@ def llm_node(state: ContentState) -> dict:
 
 def rag_node(state: ContentState) -> dict:
     raise NotImplementedError
+
+
+def arxiv_rag_node(state: ContentState) -> dict:
+    user_topic = state["topic"]
+    slug = make_topic_slug(user_topic)
+
+    try:
+        cached_slug = find_similar_slug(slug)
+
+        if cached_slug:
+            slug = cached_slug
+        else:
+            if not topic_is_cached(slug):
+                papers = fetch_arxiv_papers(user_topic)
+                all_chunks = []
+                for paper in papers:
+                    text = parse_pdf(paper["pdf_url"])
+                    text = clean_text(text)
+                    chunks = chunk_text(text, slug, paper)
+                    chunks = embed_chunks(chunks)
+                    all_chunks.extend(chunks)
+                store_chunks(all_chunks)
+
+        query_embedding = model.encode([user_topic]).tolist()[0]
+        results = retrieve_chunks(slug, query_embedding)
+        return {**state, "rag_context": results, "rag_status": None}
+
+    except Exception as e:
+        return {
+            **state,
+            "rag_context": [],
+            "rag_status": (
+                "Scientific sources unavailable for this topic — "
+                f"generating without RAG context. ({type(e).__name__})"
+            ),
+        }
 
 
 async def image_node(state: ContentState) -> dict:

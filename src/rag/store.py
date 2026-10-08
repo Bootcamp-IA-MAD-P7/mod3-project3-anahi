@@ -1,4 +1,5 @@
 import os
+from difflib import SequenceMatcher
 
 import psycopg2
 from psycopg2.extras import execute_values
@@ -13,6 +14,25 @@ def topic_is_cached(slug: str) -> bool:
         with conn.cursor() as cur:
             cur.execute("SELECT topic_is_cached(%s)", (slug,))
             return cur.fetchone()[0]
+
+
+def find_similar_slug(slug: str, threshold: float = 0.8) -> str | None:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT DISTINCT topic_slug FROM rag_chunks")
+            existing_slugs = [row[0] for row in cur.fetchall()]
+
+    best_match = None
+    best_ratio = 0.0
+    for existing in existing_slugs:
+        ratio = SequenceMatcher(None, slug, existing).ratio()
+        if ratio > best_ratio:
+            best_ratio = ratio
+            best_match = existing
+
+    if best_ratio >= threshold:
+        return best_match
+    return None
 
 
 def store_chunks(chunks: list[dict]) -> None:
