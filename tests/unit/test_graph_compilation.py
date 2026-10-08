@@ -12,7 +12,7 @@ def test_graph_has_expected_nodes():
     expected = {
         "router_node",
         "arxiv_rag_node",
-        "finance_rag_node",
+        "news_rag_node",
         "llm_node",
         "linkedin_node",
         "instagram_node",

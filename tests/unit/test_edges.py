@@ -35,7 +35,7 @@ class TestRouteAfterRouter:
         [
             (Platform.MEDIUM, "arxiv_rag_node"),
             (Platform.SUBSTACK, "arxiv_rag_node"),
-            (Platform.LINKEDIN, "finance_rag_node"),
+            (Platform.LINKEDIN, "news_rag_node"),
             (Platform.INSTAGRAM, "llm_node"),
         ],
     )

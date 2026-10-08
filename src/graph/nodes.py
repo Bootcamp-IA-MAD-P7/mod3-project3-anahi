@@ -11,6 +11,7 @@ from src.prompts.linkedin import IMAGE_STYLE as LINKEDIN_IMAGE_STYLE
 from src.prompts.medium import IMAGE_STYLE as MEDIUM_IMAGE_STYLE
 from src.prompts.substack import IMAGE_STYLE as SUBSTACK_IMAGE_STYLE
 from src.rag.arxiv_fetcher import fetch_arxiv_papers
+from src.rag.bbc_fetcher import fetch_bbc_articles
 from src.rag.chunker import chunk_text
 from src.rag.cleaner import clean_text
 from src.rag.embedder import embed_chunks, model
@@ -164,8 +165,45 @@ def arxiv_rag_node(state: ContentState) -> dict:
         }
 
 
-def finance_rag_node(state: ContentState) -> dict:
-    raise NotImplementedError
+def news_rag_node(state: ContentState) -> dict:
+    user_topic = state["topic"]
+
+    try:
+        articles = fetch_bbc_articles(user_topic, top_k=3)
+
+        if not articles:
+            return {
+                **state,
+                "rag_context": [],
+                "rag_status": (
+                    "No relevant BBC articles found for this topic — "
+                    "generating without news context."
+                ),
+            }
+
+        rag_context = [
+            {
+                "chunk_text": f"{a['title']}. {a['summary']}",
+                "paper_id": a["url"],
+                "paper_title": a["title"],
+                "authors": "BBC News",
+                "arxiv_url": a["url"],
+                "similarity": 0.0,
+            }
+            for a in articles
+        ]
+
+        return {**state, "rag_context": rag_context, "rag_status": None}
+
+    except Exception as e:
+        return {
+            **state,
+            "rag_context": [],
+            "rag_status": (
+                "News sources unavailable — "
+                f"generating without news context. ({type(e).__name__}: {e})"
+            ),
+        }
 
 
 async def image_node(state: ContentState) -> dict:
