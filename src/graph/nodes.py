@@ -146,8 +146,11 @@ def arxiv_rag_node(state: ContentState) -> dict:
                     all_chunks.extend(chunks)
                 store_chunks(all_chunks)
 
-        query_embedding = model.encode([user_topic]).tolist()[0]
-        results = retrieve_chunks(slug, query_embedding)
+        encoded = model.encode([user_topic])
+        query_embedding = (
+            encoded[0].tolist() if hasattr(encoded[0], "tolist") else list(encoded[0])
+        )
+        results = retrieve_chunks(slug, query_embedding, 3)
         return {**state, "rag_context": results, "rag_status": None}
 
     except Exception as e:
@@ -156,7 +159,7 @@ def arxiv_rag_node(state: ContentState) -> dict:
             "rag_context": [],
             "rag_status": (
                 "Scientific sources unavailable for this topic — "
-                f"generating without RAG context. ({type(e).__name__})"
+                f"generating without RAG context. ({type(e).__name__}: {e})"
             ),
         }
 

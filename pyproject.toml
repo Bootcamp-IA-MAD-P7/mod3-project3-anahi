@@ -38,5 +38,8 @@ select = ["E", "F", "I"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-markers = ["live: hits the real Groq API, opt-in via RUN_LIVE_LLM_TESTS=1"]
+markers = [
+    "live: hits the real Groq API, opt-in via RUN_LIVE_LLM_TESTS=1",
+    "integration: marks tests as integration (deselect with '-m not integration')",
+]
 
