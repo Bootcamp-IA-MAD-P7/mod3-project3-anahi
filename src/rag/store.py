@@ -70,7 +70,7 @@ def retrieve_chunks(
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT chunk_text, paper_id, paper_title, authors, arxiv_url, "
-                "similarity FROM search_chunks(%s, %s, %s)",
+                "similarity FROM search_chunks(%s, %s::vector, %s)",
                 (slug, query_embedding, top_k),
             )
             rows = cur.fetchall()
