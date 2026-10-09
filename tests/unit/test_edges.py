@@ -6,7 +6,7 @@ from src.graph.builder import (
     _route_after_platform,
     _route_after_router,
 )
-from src.graph.enums import Platform, Provider
+from src.graph.enums import Platform, Provider, Tone
 
 
 def base_state(**overrides):
@@ -15,6 +15,7 @@ def base_state(**overrides):
         "topic": "AI",
         "platform": Platform.LINKEDIN,
         "audience": "professionals",
+        "tone": Tone.PROFESSIONAL,
         "language": "en",
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,

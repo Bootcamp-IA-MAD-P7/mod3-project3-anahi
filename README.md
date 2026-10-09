@@ -57,10 +57,12 @@ The pipeline is orchestrated with LangGraph (`src/graph/`):
   Medium/Substack, BBC news for LinkedIn, none for Instagram — before generation.
   Details in [docs/rag.md](docs/rag.md).
 - **Prompts** (`src/prompts/`): `build_prompt` dispatches to one builder per
-  platform, each with its own system message and structure rules. When images are
-  enabled the builder also asks for a scene tag (`[HEADER IMAGE: ...]` for LinkedIn,
-  Medium and Substack, `[POST IMAGE: ...]` for Instagram); the platform node strips
-  that line out of the text and keeps it as `image_prompt`.
+  platform, each with its own system message and structure rules. The human
+  message carries the per-request context: topic, audience, tone
+  (`build_tone_instruction`, selected via the `Tone` enum) and language. When
+  images are enabled the builder also asks for a scene tag (`[HEADER IMAGE: ...]`
+  for LinkedIn, Medium and Substack, `[POST IMAGE: ...]` for Instagram); the
+  platform node strips that line out of the text and keeps it as `image_prompt`.
 - **LLM clients** (`src/llm/`): Groq is the primary provider and OpenRouter the
   secondary one; `src/llm/fallback.py` cascades from the selected model of either
   provider into the other provider's models, yielding a status update per attempt.

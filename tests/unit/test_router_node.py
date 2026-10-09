@@ -1,4 +1,4 @@
-from src.graph.enums import Platform, Provider
+from src.graph.enums import Platform, Provider, Tone
 from src.graph.nodes import router_node
 
 
@@ -8,6 +8,7 @@ def base_state(**overrides):
         "topic": "AI",
         "platform": Platform.LINKEDIN,
         "audience": "professionals",
+        "tone": Tone.PROFESSIONAL,
         "language": "en",
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,

@@ -6,6 +6,7 @@ from src.prompts.messages import (
     build_language_instruction,
     build_rag_block,
     build_system_message,
+    build_tone_instruction,
     build_user_block,
 )
 
@@ -69,6 +70,7 @@ def build_medium_prompt(state: ContentState) -> list[BaseMessage]:
     parts = [
         f"Topic: {state['topic']}",
         f"Target audience: {state['audience']}",
+        build_tone_instruction(state["tone"]),
         build_language_instruction(state["language"]),
         build_user_block(state["user_context"]),
     ]

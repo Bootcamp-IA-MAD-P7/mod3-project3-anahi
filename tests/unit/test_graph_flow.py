@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from src.graph.builder import build_graph
-from src.graph.enums import Platform, Provider
+from src.graph.enums import Platform, Provider, Tone
 
 
 def base_input(**overrides):
@@ -12,6 +12,7 @@ def base_input(**overrides):
         "topic": "quantum computing",
         "platform": Platform.LINKEDIN,
         "audience": "tech professionals",
+        "tone": Tone.PROFESSIONAL,
         "language": "en",
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,

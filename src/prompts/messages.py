@@ -1,6 +1,31 @@
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from src.graph.enums import Tone
 from src.graph.state import RagChunk
+
+
+def build_tone_instruction(tone: Tone) -> str:
+    descriptions = {
+        Tone.PROFESSIONAL: (
+            "Use a professional tone: formal register, authoritative voice, "
+            "structured arguments, no slang, suited for business audiences"
+        ),
+        Tone.CASUAL: (
+            "Use a casual tone: relaxed and conversational, contractions allowed, "
+            "light humor welcome, reads like a smart friend talking"
+        ),
+        Tone.INSPIRATIONAL: (
+            "Use an inspirational tone: narrative-driven, emotionally resonant, "
+            "motivational arc, personal stories or vision, end with an uplifting "
+            "close or call to action"
+        ),
+        Tone.TECHNICAL: (
+            "Use a technical tone: precise terminology, assume domain knowledge, "
+            "explain mechanisms not just outcomes, include concrete examples "
+            "or step-by-step breakdowns where relevant"
+        ),
+    }
+    return descriptions[tone]
 
 
 def build_language_instruction(language: str) -> str:

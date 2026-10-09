@@ -4,15 +4,15 @@ pytest suite — offline by default, external services gated behind markers.
 
 ## Layout
 
-122 tests total: 92 unit, 30 integration.
+126 tests total: 96 unit, 30 integration.
 
-### Unit (`tests/unit/`, 92 tests)
+### Unit (`tests/unit/`, 96 tests)
 
 All mocked, no network, no API keys.
 
 | File | Tests | Covers |
 |---|---|---|
-| `test_prompts.py` | 40 | Prompt builders: shape, topic/audience/language, user context, RAG block, citations block, image block, dispatch |
+| `test_prompts.py` | 44 | Prompt builders: shape, topic/audience/tone/language, user context, tone instruction, RAG block, citations block, image block, dispatch |
 | `test_edges.py` | 10 | Graph routing: `_route_after_router` (platform → RAG node), `_route_after_llm`, `_route_after_platform` |
 | `test_router_node.py` | 8 | `router_node`: citations and image flag normalization |
 | `test_image_security.py` | 8 | Image rate limits (per minute, per user, per account) |
@@ -92,10 +92,10 @@ Last run, 2026-10-09 (with `DATABASE_URL` exported):
 
 | Command | Result |
 |---|---|
-| `uv run pytest -q` | **104 passed, 18 skipped** in 84.3s |
-| `uv run pytest -q -m "not integration"` | **92 passed, 18 skipped, 12 deselected** in 32.4s |
-| `uv run pytest -m integration -v` | **12 passed, 110 deselected** in 70.6s |
-| `uv run pytest -m integration -q` (no `DATABASE_URL`) | **2 passed, 10 skipped, 110 deselected** in 41.4s |
+| `uv run pytest -q` | **108 passed, 18 skipped** in 53.6s |
+| `uv run pytest -q -m "not integration"` | **96 passed, 18 skipped, 12 deselected** in 36.3s |
+| `uv run pytest -m integration -v` | **12 passed, 114 deselected** in 47.3s |
+| `uv run pytest -m integration -q` (no `DATABASE_URL`) | **2 passed, 10 skipped, 114 deselected** in 40.9s |
 
 ### What the skips and deselections mean
 
@@ -117,28 +117,28 @@ Neon database:
 
 | Test | Result | Duration | Verified |
 |---|---|---|---|
-| `test_arxiv_rag_integration.py::test_arxiv_pipeline_real` | PASSED | 2.69s | Real arXiv fetch (1 paper), real PDF download + parse (>500 chars), clean, chunk, embed → 384-dim vectors |
-| `test_news_rag_integration.py::test_bbc_pipeline_real` | PASSED | 3.53s | Real BBC business + technology RSS feeds, semantic ranking → ≤3 articles, non-empty titles/summaries, `https://` URLs |
+| `test_arxiv_rag_integration.py::test_arxiv_pipeline_real` | PASSED | 1.53s | Real arXiv fetch (1 paper), real PDF download + parse (>500 chars), clean, chunk, embed → 384-dim vectors |
+| `test_news_rag_integration.py::test_bbc_pipeline_real` | PASSED | 3.06s | Real BBC business + technology RSS feeds, semantic ranking → ≤3 articles, non-empty titles/summaries, `https://` URLs |
 
 #### DB integration results
 
-Same run → **12 passed in 70.6s**, 10 of them DB (≈40s of the wall time is
+Same run → **12 passed in 47.8s**, 10 of them DB (≈36s of the wall time is
 importing `sentence-transformers` and loading the MiniLM model at collection):
 
 | Test | Duration | Verified |
 |---|---|---|
-| `test_topic_not_cached_on_empty` | 0.80s | `topic_is_cached("test-integration-quantum")` → `False` before any write |
-| `test_store_and_retrieve_chunks` | 2.91s | 2 chunks with real 384-dim MiniLM embeddings stored, `topic_is_cached` → `True`, `retrieve_chunks` → non-empty dicts with the 6 expected keys |
-| `test_find_similar_slug` | 1.83s | typo slug `test-integration-quantom` (ratio ≈ 0.96) resolves to `test-integration-quantum` |
-| `test_find_similar_slug_no_match` | 0.78s | `completely-different-topic-xyz` → `None` |
-| `test_search_chunks_sql_function` | 1.22s | direct `SELECT * FROM search_chunks(...)` returns rows whose 6 columns match the function signature |
-| `test_user_profile_insert_and_retrieve` | <0.64s | `user_profiles` insert + select round-trips `user_context` |
-| `test_user_profile_updated_at_trigger` | 2.98s | 1s between two `upsert_user_context` calls, `updated_at` increased → the `user_profiles_updated_at` trigger fires on the conflict update |
-| `test_get_user_context_empty` | 0.90s | `get_user_context` on a missing row → `""` |
-| `test_upsert_and_get_user_context` | 1.79s | upsert `Acme Corp, professional tone` → `get_user_context` returns it (insert path) |
-| `test_upsert_updates_existing` | 2.47s | second upsert wins → `updated context`, single row (conflict update path) |
+| `test_topic_not_cached_on_empty` | 0.31s | `topic_is_cached("test-integration-quantum")` → `False` before any write |
+| `test_store_and_retrieve_chunks` | 1.16s | 2 chunks with real 384-dim MiniLM embeddings stored, `topic_is_cached` → `True`, `retrieve_chunks` → non-empty dicts with the 6 expected keys |
+| `test_find_similar_slug` | 0.75s | typo slug `test-integration-quantom` (ratio ≈ 0.96) resolves to `test-integration-quantum` |
+| `test_find_similar_slug_no_match` | 0.33s | `completely-different-topic-xyz` → `None` |
+| `test_search_chunks_sql_function` | 0.51s | direct `SELECT * FROM search_chunks(...)` returns rows whose 6 columns match the function signature |
+| `test_user_profile_insert_and_retrieve` | <0.27s | `user_profiles` insert + select round-trips `user_context` |
+| `test_user_profile_updated_at_trigger` | 1.74s | 1s between two `upsert_user_context` calls, `updated_at` increased → the `user_profiles_updated_at` trigger fires on the conflict update |
+| `test_get_user_context_empty` | 0.31s | `get_user_context` on a missing row → `""` |
+| `test_upsert_and_get_user_context` | 0.62s | upsert `Acme Corp, professional tone` → `get_user_context` returns it (insert path) |
+| `test_upsert_updates_existing` | 1.03s | second upsert wins → `updated context`, single row (conflict update path) |
 
-Wall time for the full `-m integration` run was 70.6s despite ~22s of test
+Wall time for the full `-m integration` run was 47.8s despite ~12s of test
 calls — the remaining time is importing `sentence-transformers` and loading the
 MiniLM model at collection.
 

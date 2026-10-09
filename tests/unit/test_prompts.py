@@ -1,11 +1,12 @@
 import pytest
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from src.graph.enums import Platform, Provider
+from src.graph.enums import Platform, Provider, Tone
 from src.prompts.base import build_prompt
 from src.prompts.instagram import build_instagram_prompt
 from src.prompts.linkedin import build_linkedin_prompt
 from src.prompts.medium import build_medium_prompt
+from src.prompts.messages import build_tone_instruction
 from src.prompts.substack import build_substack_prompt
 
 BUILDERS = {
@@ -40,6 +41,7 @@ def base_state(**overrides):
         "topic": "AI",
         "platform": Platform.LINKEDIN,
         "audience": "professionals",
+        "tone": Tone.PROFESSIONAL,
         "language": "en",
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
@@ -87,6 +89,16 @@ class TestHumanMessage:
     def test_omits_user_context_when_empty(self, platform):
         human = BUILDERS[platform](base_state(platform=platform))[1].content
         assert "Context about the author" not in human
+
+
+class TestToneInstruction:
+    @pytest.mark.parametrize("tone", list(Tone))
+    def test_tone_instruction_in_human_message(self, tone):
+        state = base_state(platform=Platform.LINKEDIN, tone=tone)
+        messages = build_linkedin_prompt(state)
+        description = build_tone_instruction(tone)
+        assert description in messages[1].content
+        assert description not in messages[0].content
 
 
 class TestSystemStructure:

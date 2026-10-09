@@ -1,6 +1,6 @@
 from typing import NotRequired, TypedDict
 
-from src.graph.enums import Platform, Provider
+from src.graph.enums import Platform, Provider, Tone
 
 
 class RagChunk(TypedDict):
@@ -17,6 +17,7 @@ class ContentState(TypedDict):
     topic: str
     platform: Platform
     audience: str
+    tone: Tone
     language: str
     model: str
     provider: Provider
