@@ -79,10 +79,18 @@ they work. Provider details, secrets and the daily model checks are documented i
 
 ## Running Tests
 
-- **Default suite (offline):**
+Full breakdown, markers and latest results in [docs/tests.md](docs/tests.md).
+
+- **Default suite** (unit + RAG network tests, live tests skipped):
 
   ```bash
   pytest
+  ```
+
+- **Unit only** (what CI runs):
+
+  ```bash
+  pytest -m "not integration"
   ```
 
 - **Live LLM integration tests** (requires `GROQ_API_KEY` and `OPENROUTER_API_KEY`):

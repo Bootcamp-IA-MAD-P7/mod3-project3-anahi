@@ -41,6 +41,7 @@ testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
     "live: hits the real Groq API, opt-in via RUN_LIVE_LLM_TESTS=1",
-    "integration: marks tests as integration (deselect with '-m not integration')",
+    "integration: marks tests that hit real external services",
+    "slow: marks tests that are slow due to network or model loading",
 ]
 
