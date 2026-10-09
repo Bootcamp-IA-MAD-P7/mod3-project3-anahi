@@ -21,9 +21,10 @@ https://console.groq.com/docs/rate-limits
 Live today through `src/llm/open_router.py`. The model list is discovered at import
 time by `get_available_models()`, which queries the OpenRouter models endpoint and
 keeps every id containing `:free`, falling back to `DEFAULT_MODEL`
-(`inclusionai/ling-3.0-flash-sante:free`) when the API is unreachable. Ids listed in
-`BLOCKED_MODELS` are filtered out, currently the models that answer 403 because they
-only run inside agentic harnesses. Browse the free catalog at
+(`qwen/qwen3.8-27b:free`) when the API is unreachable. Ids listed in
+`BLOCKED_MODELS` are filtered out: the models that answer 403 because they
+only run inside agentic harnesses, and the ones that failed live checks with
+persistent upstream 429s. Browse the free catalog at
 https://openrouter.ai/models?q=:free
 
 ### Fallback chain
