@@ -189,7 +189,22 @@ from `paper_title`, `authors`, and `arxiv_url` fields — for BBC articles
 these fields are populated but the citations block is suppressed by the
 `citations_enabled` flag in state.
 
-The `rag_enabled` toggle was removed — RAG is always on. The router node
-routes purely by platform: Medium and Substack invoke the arXiv pipeline,
-LinkedIn invokes the News pipeline, and Instagram bypasses RAG entirely
+The router node routes purely by platform: Medium and Substack invoke the arXiv
+pipeline, LinkedIn invokes the News pipeline, and Instagram bypasses RAG entirely
 because no pipeline exists for it.
+
+### Why there is no `rag_enabled` toggle
+
+RAG was first designed with an explicit `rag_enabled` flag that callers could set
+per request, defaulting to on for the platforms that have a pipeline. It was
+ultimately decided against and deleted, because the tradeoff was not good.
+
+Removing it makes the system leaner than keeping it: fewer state permutations to
+reason about, routing that depends on nothing but the platform, and no branch where
+a caller accidentally disables grounding and gets a silently worse answer. The
+benefit a toggle would offer — letting a user opt out — would not compensate for
+that cost, because most users want the magic to happen, not make more decisions.
+
+So RAG is always on, the router is a pure function of platform, and the only
+remaining escape hatch is failure: if a pipeline cannot run, it degrades to an
+empty context and generation proceeds without grounding.
