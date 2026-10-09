@@ -16,7 +16,6 @@ def base_state(**overrides):
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": True,
-        "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
         "rag_context": [],

@@ -17,8 +17,6 @@ from src.graph.state import ContentState
 
 
 def _route_after_router(state: ContentState) -> str:
-    if not state["rag_enabled"]:
-        return "llm_node"
     platform = state["platform"]
     if platform in (Platform.MEDIUM, Platform.SUBSTACK):
         return "arxiv_rag_node"

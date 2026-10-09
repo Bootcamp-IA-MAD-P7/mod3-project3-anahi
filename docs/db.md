@@ -22,7 +22,7 @@ Neon (serverless Postgres) with pgvector. No pooling — use the direct connecti
 |---|---|---|
 | `users` | Neon Auth | Managed automatically — do not modify |
 | `user_profiles` | us | Extends users with `user_context` for persona/company context |
-| `rag_chunks` | us | Stores cleaned, chunked, embedded arXiv passages |
+| `rag_chunks` | us | Stores cleaned, chunked, embedded arXiv passages (the BBC news pipeline is live-only, no storage) |
 
 ## Functions
 

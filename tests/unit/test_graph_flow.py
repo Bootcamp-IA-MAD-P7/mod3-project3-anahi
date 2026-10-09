@@ -15,7 +15,6 @@ def base_input(**overrides):
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
-        "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
         "rag_context": [],
@@ -67,16 +66,16 @@ def graph_with_mocks():
         patch("src.graph.builder.substack_node", mock_platform_node),
         patch("src.graph.builder.image_node", mock_image_node),
         patch("src.graph.builder.arxiv_rag_node", mock_rag_node),
+        patch("src.graph.builder.news_rag_node", mock_rag_node),
     ):
         yield build_graph()
 
 
 class TestGraphFlow:
-    def test_linkedin_no_rag_no_image(self, graph_with_mocks):
+    def test_linkedin_no_image(self, graph_with_mocks):
         result = graph_with_mocks.invoke(
             base_input(
                 platform=Platform.LINKEDIN,
-                rag_enabled=False,
                 image_enabled=False,
             )
         )
@@ -87,7 +86,6 @@ class TestGraphFlow:
         result = graph_with_mocks.invoke(
             base_input(
                 platform=Platform.MEDIUM,
-                rag_enabled=True,
                 image_enabled=False,
             )
         )
@@ -117,7 +115,6 @@ class TestGraphFlow:
         result = graph_with_mocks.invoke(
             base_input(
                 platform=Platform.SUBSTACK,
-                rag_enabled=True,
                 image_enabled=False,
             )
         )

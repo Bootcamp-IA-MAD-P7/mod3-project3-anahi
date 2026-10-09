@@ -2,8 +2,9 @@
 
 Content generation pipeline that writes posts for Instagram, LinkedIn, Medium and
 Substack using LangGraph orchestration, with an optional AI image per post. See
-[docs/llm-setup.md](docs/llm-setup.md) for LLM provider details and
-[docs/image-generation.md](docs/image-generation.md) for the image pipeline.
+[docs/llm-setup.md](docs/llm-setup.md) for LLM provider details,
+[docs/image-generation.md](docs/image-generation.md) for the image pipeline and
+[docs/rag.md](docs/rag.md) for the RAG pipelines.
 
 ## Setup
 
@@ -22,6 +23,7 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
   | `OPENROUTER_API_KEY` | https://openrouter.ai/settings/keys |
   | `CLOUDFLARE_API_TOKEN` | https://dash.cloudflare.com/profile/api-tokens (Workers AI read permission) |
   | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard, Workers & Pages, Account ID |
+  | `DATABASE_URL` | Neon dashboard → Connection Details (direct, no `-pooler`), for RAG storage |
 
 - **Run the app:**
 
@@ -39,15 +41,21 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
 | `OPENROUTER_API_KEY` | Yes | API key for OpenRouter, the secondary provider that supplies the free model list |
 | `CLOUDFLARE_API_TOKEN` | For images | Cloudflare API token used to call Workers AI image models |
 | `CLOUDFLARE_ACCOUNT_ID` | For images | Cloudflare account id that owns the Workers AI models |
+| `DATABASE_URL` | For RAG | Neon Postgres connection string used to store and retrieve embedded chunks |
 
 ## Architecture
 
 The pipeline is orchestrated with LangGraph (`src/graph/`):
 
-`router_node` → `rag_node` (only when RAG is enabled) → `llm_node` → platform node
+`router_node` → RAG node (`arxiv_rag_node` for Medium/Substack,
+`news_rag_node` for LinkedIn; Instagram skips RAG) → `llm_node` → platform node
 (`linkedin_node`, `instagram_node`, `medium_node`, `substack_node`) → `image_node`
 (only when images are enabled)
 
+- **Router** (`src/graph/builder.py`): `router_node` normalizes flags and
+  `_route_after_router` picks which RAG pipeline runs based on platform — arXiv for
+  Medium/Substack, BBC news for LinkedIn, none for Instagram — before generation.
+  Details in [docs/rag.md](docs/rag.md).
 - **Prompts** (`src/prompts/`): `build_prompt` dispatches to one builder per
   platform, each with its own system message and structure rules. When images are
   enabled the builder also asks for a scene tag (`[HEADER IMAGE: ...]` for LinkedIn,
@@ -63,9 +71,9 @@ The pipeline is orchestrated with LangGraph (`src/graph/`):
   tries Cloudflare models in turn until one returns an image. Rate limits live in
   `src/chains/image_security.py`.
 
-The frontend is planned as a Gradio UI, and RAG over arXiv papers is planned as the
-grounding source (`rag_node` raises `NotImplementedError` today). Provider details,
-secrets and the daily model checks are documented in
+The frontend is planned as a Gradio UI. RAG is live with two pipelines (arXiv for
+Medium/Substack, BBC news for LinkedIn) — see [docs/rag.md](docs/rag.md) for how
+they work. Provider details, secrets and the daily model checks are documented in
 [docs/llm-setup.md](docs/llm-setup.md), the image pipeline in
 [docs/image-generation.md](docs/image-generation.md).
 

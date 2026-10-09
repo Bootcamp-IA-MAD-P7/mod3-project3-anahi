@@ -20,7 +20,6 @@ class ContentState(TypedDict):
     model: str
     provider: Provider
     image_enabled: bool
-    rag_enabled: bool
     citations_enabled: bool
     user_context: str
     rag_context: NotRequired[list[RagChunk]]

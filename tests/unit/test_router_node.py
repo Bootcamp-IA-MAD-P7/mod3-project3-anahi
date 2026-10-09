@@ -11,7 +11,6 @@ def base_state(**overrides):
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
-        "rag_enabled": None,
         "citations_enabled": None,
         "user_context": "",
         "rag_context": [],
@@ -20,32 +19,6 @@ def base_state(**overrides):
         "status_messages": [],
     }
     return {**defaults, **overrides}
-
-
-class TestRagDefaults:
-    def test_rag_defaults_false_for_linkedin(self):
-        result = router_node(base_state(platform=Platform.LINKEDIN, rag_enabled=None))
-        assert result["rag_enabled"] is False
-
-    def test_rag_defaults_false_for_instagram(self):
-        result = router_node(base_state(platform=Platform.INSTAGRAM, rag_enabled=None))
-        assert result["rag_enabled"] is False
-
-    def test_rag_defaults_true_for_medium(self):
-        result = router_node(base_state(platform=Platform.MEDIUM, rag_enabled=None))
-        assert result["rag_enabled"] is True
-
-    def test_rag_defaults_true_for_substack(self):
-        result = router_node(base_state(platform=Platform.SUBSTACK, rag_enabled=None))
-        assert result["rag_enabled"] is True
-
-    def test_rag_explicit_false_on_medium_is_respected(self):
-        result = router_node(base_state(platform=Platform.MEDIUM, rag_enabled=False))
-        assert result["rag_enabled"] is False
-
-    def test_rag_explicit_true_on_linkedin_is_respected(self):
-        result = router_node(base_state(platform=Platform.LINKEDIN, rag_enabled=True))
-        assert result["rag_enabled"] is True
 
 
 class TestCitationsDefaults:

@@ -43,7 +43,6 @@ def base_state(**overrides):
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
-        "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
         "rag_context": [],
@@ -102,10 +101,9 @@ class TestRagBlock:
         "platform",
         [Platform.LINKEDIN, Platform.MEDIUM, Platform.SUBSTACK],
     )
-    def test_includes_research_block_when_enabled(self, platform):
+    def test_includes_research_block(self, platform):
         state = base_state(
             platform=platform,
-            rag_enabled=True,
             rag_context=[MOCK_RAG_CHUNK],
         )
         human = BUILDERS[platform](state)[1].content
@@ -118,14 +116,13 @@ class TestRagBlock:
         "platform",
         [Platform.LINKEDIN, Platform.MEDIUM, Platform.SUBSTACK],
     )
-    def test_omits_research_block_when_disabled(self, platform):
+    def test_omits_research_block_when_context_empty(self, platform):
         human = BUILDERS[platform](base_state(platform=platform))[1].content
         assert "reference material" not in human
 
     def test_instagram_ignores_rag(self):
         state = base_state(
             platform=Platform.INSTAGRAM,
-            rag_enabled=True,
             rag_context=[MOCK_RAG_CHUNK],
         )
         human = build_instagram_prompt(state)[1].content

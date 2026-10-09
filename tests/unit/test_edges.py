@@ -18,7 +18,6 @@ def base_state(**overrides):
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
-        "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
         "rag_context": [],
@@ -39,12 +38,8 @@ class TestRouteAfterRouter:
             (Platform.INSTAGRAM, "llm_node"),
         ],
     )
-    def test_routes_to_correct_rag_node_when_enabled(self, platform, expected):
-        state = base_state(platform=platform, rag_enabled=True)
-        assert _route_after_router(state) == expected
-
-    def test_routes_to_llm_when_rag_disabled(self):
-        assert _route_after_router(base_state(rag_enabled=False)) == "llm_node"
+    def test_routes_to_correct_rag_node(self, platform, expected):
+        assert _route_after_router(base_state(platform=platform)) == expected
 
 
 class TestRouteAfterLlm:

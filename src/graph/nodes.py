@@ -71,10 +71,6 @@ def router_node(state: ContentState) -> dict:
     platform = state["platform"]
     image_enabled = state["image_enabled"]
 
-    rag_enabled = state.get("rag_enabled")
-    if rag_enabled is None:
-        rag_enabled = platform in (Platform.MEDIUM, Platform.SUBSTACK)
-
     citations_enabled = state.get("citations_enabled")
     if citations_enabled is None:
         citations_enabled = False
@@ -85,7 +81,6 @@ def router_node(state: ContentState) -> dict:
         image_enabled = True
 
     return {
-        "rag_enabled": rag_enabled,
         "citations_enabled": citations_enabled,
         "image_enabled": image_enabled,
     }
