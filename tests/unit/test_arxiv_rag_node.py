@@ -25,6 +25,7 @@ MOCK_EMBEDDING = [0.1] * 384
 
 def base_state(**overrides):
     defaults = {
+        "token": "test-jwt-token",
         "topic": "quantum computing",
         "platform": Platform.MEDIUM,
         "audience": "general public",

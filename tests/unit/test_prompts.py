@@ -36,6 +36,7 @@ MOCK_RAG_CHUNK = {
 
 def base_state(**overrides):
     defaults = {
+        "token": "test-jwt-token",
         "topic": "AI",
         "platform": Platform.LINKEDIN,
         "audience": "professionals",

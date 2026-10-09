@@ -13,6 +13,7 @@ class RagChunk(TypedDict):
 
 
 class ContentState(TypedDict):
+    token: str
     topic: str
     platform: Platform
     audience: str

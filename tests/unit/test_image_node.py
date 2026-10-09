@@ -9,6 +9,7 @@ from src.graph.nodes import image_node
 
 def base_state(**overrides):
     defaults = {
+        "token": "test-jwt-token",
         "topic": "AI trends",
         "platform": Platform.LINKEDIN,
         "audience": "professionals",
@@ -49,28 +50,32 @@ async def mock_fallback_failure(*args, **kwargs):
 
 @pytest.mark.asyncio
 class TestImageNode:
-    async def test_stores_image_data_on_success(self):
+    @patch("src.graph.nodes.get_user_id", return_value="test-user")
+    async def test_stores_image_data_on_success(self, _get_user_id):
         with patch(
             "src.graph.nodes.run_image_with_fallback", new=mock_fallback_success
         ):
             result = await image_node(base_state())
         assert result["image_data"] == b"img"
 
-    async def test_appends_status_messages(self):
+    @patch("src.graph.nodes.get_user_id", return_value="test-user")
+    async def test_appends_status_messages(self, _get_user_id):
         with patch(
             "src.graph.nodes.run_image_with_fallback", new=mock_fallback_success
         ):
             result = await image_node(base_state())
         assert any("flux-1-schnell" in s for s in result["status_messages"])
 
-    async def test_appends_daily_limit_warning_when_is_last(self):
+    @patch("src.graph.nodes.get_user_id", return_value="test-user")
+    async def test_appends_daily_limit_warning_when_is_last(self, _get_user_id):
         with patch(
             "src.graph.nodes.run_image_with_fallback", new=mock_fallback_is_last
         ):
             result = await image_node(base_state())
         assert "You've reached your daily image limit" in result["status_messages"]
 
-    async def test_sets_none_when_no_result(self):
+    @patch("src.graph.nodes.get_user_id", return_value="test-user")
+    async def test_sets_none_when_no_result(self, _get_user_id):
         with patch(
             "src.graph.nodes.run_image_with_fallback", new=mock_fallback_failure
         ):

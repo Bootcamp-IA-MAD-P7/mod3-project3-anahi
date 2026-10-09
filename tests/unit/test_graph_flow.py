@@ -8,6 +8,7 @@ from src.graph.enums import Platform, Provider
 
 def base_input(**overrides):
     defaults = {
+        "token": "test-jwt-token",
         "topic": "quantum computing",
         "platform": Platform.LINKEDIN,
         "audience": "tech professionals",

@@ -1,3 +1,6 @@
+import os
+
+import jwt
 from markdown_it import MarkdownIt
 from markdownify import markdownify
 
@@ -86,7 +89,17 @@ def router_node(state: ContentState) -> dict:
     }
 
 
-_DEFAULT_USER_ID = "default-user"
+def get_user_id(token: str) -> str:
+    jwks_client = jwt.PyJWKClient(os.environ["NEON_AUTH_JWKS_URL"])
+    signing_key = jwks_client.get_signing_key_from_jwt(token)
+    payload = jwt.decode(
+        token,
+        signing_key.key,
+        algorithms=["RS256"],
+        options={"verify_aud": False},
+    )
+    return payload["sub"]
+
 
 _PLATFORM_IMAGE_STYLES = {
     Platform.LINKEDIN: LINKEDIN_IMAGE_STYLE,
@@ -104,7 +117,7 @@ def llm_node(state: ContentState) -> dict:
     for update in run_with_fallback(
         selected_model=state["model"],
         prompt=messages,
-        user_id=_DEFAULT_USER_ID,
+        user_id=get_user_id(state["token"]),
         provider=state["provider"],
     ):
         status_messages.append(update.status)
@@ -213,7 +226,7 @@ async def image_node(state: ContentState) -> dict:
     async for update in run_image_with_fallback(
         prompt=prompt,
         platform=platform,
-        user_id=_DEFAULT_USER_ID,
+        user_id=get_user_id(state["token"]),
     ):
         status_messages.append(update.status)
         if update.result is not None:

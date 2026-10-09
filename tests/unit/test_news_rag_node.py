@@ -13,6 +13,7 @@ MOCK_ARTICLE = {
 
 def base_state(**overrides):
     defaults = {
+        "token": "test-jwt-token",
         "topic": "quantum computing",
         "platform": Platform.LINKEDIN,
         "audience": "general public",
