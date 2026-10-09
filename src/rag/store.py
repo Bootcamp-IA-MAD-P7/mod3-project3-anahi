@@ -85,3 +85,29 @@ def retrieve_chunks(
         }
         for row in rows
     ]
+
+
+def get_user_context(user_id: str) -> str:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT user_context FROM user_profiles WHERE user_id = %s",
+                (user_id,),
+            )
+            row = cur.fetchone()
+    return row[0] if row and row[0] else ""
+
+
+def upsert_user_context(user_id: str, user_context: str) -> None:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO user_profiles (user_id, user_context)
+                VALUES (%s, %s)
+                ON CONFLICT (user_id)
+                DO UPDATE SET user_context = EXCLUDED.user_context
+                """,
+                (user_id, user_context),
+            )
+        conn.commit()

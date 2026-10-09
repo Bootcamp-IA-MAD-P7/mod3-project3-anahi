@@ -7,9 +7,11 @@ import pytest
 from src.rag.embedder import model
 from src.rag.store import (
     find_similar_slug,
+    get_user_context,
     retrieve_chunks,
     store_chunks,
     topic_is_cached,
+    upsert_user_context,
 )
 
 pytestmark = pytest.mark.skipif(
@@ -21,7 +23,9 @@ TEST_SLUG = "test-integration-quantum"
 TEST_TYPO_SLUG = "test-integration-quantom"
 TEST_USER_ID = "test-user-integration"
 TEST_USER_CONTEXT = "Test company context"
-UPDATED_USER_CONTEXT = "Updated company context"
+ACME_CONTEXT = "Acme Corp, professional tone"
+FIRST_CONTEXT = "first context"
+UPDATED_CONTEXT = "updated context"
 TEXTS = ["test chunk one", "test chunk two"]
 RESULT_KEYS = {
     "chunk_text",
@@ -140,25 +144,18 @@ def test_user_profile_insert_and_retrieve(conn):
 
 @pytest.mark.integration
 def test_user_profile_updated_at_trigger(conn):
+    upsert_user_context(TEST_USER_ID, FIRST_CONTEXT)
     with conn.cursor() as cur:
-        cur.execute(
-            "INSERT INTO user_profiles (user_id, user_context) VALUES (%s, %s)",
-            (TEST_USER_ID, TEST_USER_CONTEXT),
-        )
-        conn.commit()
         cur.execute(
             "SELECT updated_at FROM user_profiles WHERE user_id = %s",
             (TEST_USER_ID,),
         )
         first = cur.fetchone()[0]
 
-        time.sleep(1)
+    time.sleep(1)
 
-        cur.execute(
-            "UPDATE user_profiles SET user_context = %s WHERE user_id = %s",
-            (UPDATED_USER_CONTEXT, TEST_USER_ID),
-        )
-        conn.commit()
+    upsert_user_context(TEST_USER_ID, UPDATED_CONTEXT)
+    with conn.cursor() as cur:
         cur.execute(
             "SELECT updated_at FROM user_profiles WHERE user_id = %s",
             (TEST_USER_ID,),
@@ -166,3 +163,23 @@ def test_user_profile_updated_at_trigger(conn):
         second = cur.fetchone()[0]
 
     assert second > first
+
+
+@pytest.mark.integration
+def test_get_user_context_empty(conn):
+    assert get_user_context(TEST_USER_ID) == ""
+
+
+@pytest.mark.integration
+def test_upsert_and_get_user_context(conn):
+    upsert_user_context(TEST_USER_ID, ACME_CONTEXT)
+
+    assert get_user_context(TEST_USER_ID) == ACME_CONTEXT
+
+
+@pytest.mark.integration
+def test_upsert_updates_existing(conn):
+    upsert_user_context(TEST_USER_ID, FIRST_CONTEXT)
+    upsert_user_context(TEST_USER_ID, UPDATED_CONTEXT)
+
+    assert get_user_context(TEST_USER_ID) == UPDATED_CONTEXT
