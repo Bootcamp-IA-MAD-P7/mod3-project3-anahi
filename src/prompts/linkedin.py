@@ -73,8 +73,7 @@ def build_linkedin_prompt(state: ContentState) -> list[BaseMessage]:
     if state["image_enabled"]:
         parts.append(
             "Include a scene description for the post image in this exact format:\n"
-            "[HEADER IMAGE: description of a scene that captures the mood and "
-            "topic of this post]"
+            f"[HEADER IMAGE: {IMAGE_STYLE}]"
         )
 
     human = build_human_message(parts)

@@ -160,16 +160,33 @@ def arxiv_rag_node(state: ContentState) -> dict:
             encoded[0].tolist() if hasattr(encoded[0], "tolist") else list(encoded[0])
         )
         results = retrieve_chunks(slug, query_embedding, 3)
+        if not results:
+            msg = (
+                "No relevant arXiv articles found for this topic, "
+                "generating without RAG context."
+            )
+            status_messages = list(state.get("status_messages", []))
+            status_messages.append(msg)
+            return {
+                **state,
+                "rag_context": [],
+                "rag_status": msg,
+                "status_messages": status_messages,
+            }
         return {**state, "rag_context": results, "rag_status": None}
 
     except Exception as e:
+        msg = (
+            "ArXiv articles unavailable for this topic, "
+            f"generating without RAG context. ({type(e).__name__}: {e})"
+        )
+        status_messages = list(state.get("status_messages", []))
+        status_messages.append(msg)
         return {
             **state,
             "rag_context": [],
-            "rag_status": (
-                "Scientific sources unavailable for this topic — "
-                f"generating without RAG context. ({type(e).__name__}: {e})"
-            ),
+            "rag_status": msg,
+            "status_messages": status_messages,
         }
 
 
@@ -180,13 +197,17 @@ def news_rag_node(state: ContentState) -> dict:
         articles = fetch_bbc_articles(user_topic, top_k=3)
 
         if not articles:
+            msg = (
+                "No relevant BBC articles found for this topic, "
+                "generating without news context."
+            )
+            status_messages = list(state.get("status_messages", []))
+            status_messages.append(msg)
             return {
                 **state,
                 "rag_context": [],
-                "rag_status": (
-                    "No relevant BBC articles found for this topic — "
-                    "generating without news context."
-                ),
+                "rag_status": msg,
+                "status_messages": status_messages,
             }
 
         rag_context = [
@@ -204,13 +225,17 @@ def news_rag_node(state: ContentState) -> dict:
         return {**state, "rag_context": rag_context, "rag_status": None}
 
     except Exception as e:
+        msg = (
+            "News sources unavailable, "
+            f"generating without news context. ({type(e).__name__}: {e})"
+        )
+        status_messages = list(state.get("status_messages", []))
+        status_messages.append(msg)
         return {
             **state,
             "rag_context": [],
-            "rag_status": (
-                "News sources unavailable — "
-                f"generating without news context. ({type(e).__name__}: {e})"
-            ),
+            "rag_status": msg,
+            "status_messages": status_messages,
         }
 
 
@@ -289,9 +314,7 @@ def substack_node(state: ContentState) -> dict:
     image_prompt = ""
 
     if state["image_enabled"]:
-        text, image_prompt = _extract_image_prompt(
-            text, prefix="[HEADER IMAGE: illustration style —"
-        )
+        text, image_prompt = _extract_image_prompt(text, prefix="[HEADER IMAGE:")
 
     return {
         "generated_text": text,

@@ -20,7 +20,7 @@ PLATFORM_MARKERS = {
     Platform.LINKEDIN: ["HOOK", "BODY", "CALL TO ACTION"],
     Platform.INSTAGRAM: ["Contradiction & Contrast", "Specificity Effect", "POV"],
     Platform.MEDIUM: ["HEADLINE", "STRUCTURE", "FORMATTING"],
-    Platform.SUBSTACK: ["TITLE & SUBTITLE", "OPENING", "TONE"],
+    Platform.SUBSTACK: ["TITLE & SUBTITLE", "OPENING", "SPIRIT"],
 }
 
 PLATFORMS = list(Platform)
