@@ -16,6 +16,9 @@ DEFAULT_MODEL = "nvidia/nemotron-3.5-lightning:free"
 BLOCKED_MODELS = {
     "thinkingmachines/inkling:free",
     "thinkingmachines/inkling-small:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "google/gemma-4-31b-it:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
 }
 
 
