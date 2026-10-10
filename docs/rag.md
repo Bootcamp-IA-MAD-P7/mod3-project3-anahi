@@ -106,9 +106,11 @@ for the prompt builder to consume.
 
 Any exception in the pipeline — network failure, PDF parse error, DB
 unavailability — is caught at the node level. The node degrades gracefully:
-`rag_context` is set to an empty list, `rag_status` carries a human-readable
-error message that surfaces in the UI, and the LLM generation node runs
-without RAG context rather than crashing the graph.
+`rag_context` is set to an empty list, the human-readable message is written
+to `rag_status` and appended to `status_messages`, and the LLM generation
+node runs without RAG context rather than crashing the graph. An empty
+retrieval result (topic cached but no chunks match) is treated the same
+way, with its own message.
 
 ---
 
@@ -174,8 +176,9 @@ URL fields are present in state but never rendered in the output.
 ### Failure handling
 
 Same pattern as arXiv RAG — any exception degrades gracefully to empty
-`rag_context` and a `rag_status` message. Feed unavailability or an empty
-result set both produce a status message without crashing the graph.
+`rag_context`, with the message written to `rag_status` and appended to
+`status_messages`. Feed unavailability or an empty result set both produce
+a status message without crashing the graph.
 
 ---
 

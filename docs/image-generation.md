@@ -16,11 +16,12 @@ cascade and the rate limits.
    | Substack | `[HEADER IMAGE: ...]` |
 
 2. The platform node in [src/graph/nodes.py](../src/graph/nodes.py) pulls that line
-   out of the text and stores it as `state["image_prompt"]`.
-3. `image_node` builds the final prompt as
-   `f"{IMAGE_STYLE} — {image_prompt}, topic: {topic}"`, where `IMAGE_STYLE` comes
-   from the platform prompt module, and streams `ImageFallbackUpdate` values from
-   `run_image_with_fallback`.
+   out of the text and stores it as `state["image_prompt"]`. The tag format shown
+   to the LLM embeds the platform's `IMAGE_STYLE`, so the extracted scene already
+   carries the style with it.
+3. `image_node` forwards the scene as
+   `f"{image_prompt}, topic: {topic}"` and streams `ImageFallbackUpdate` values
+   from `run_image_with_fallback`.
 4. The winning image lands in `state["image_data"]` as raw bytes, and every update
    status is appended to `state["status_messages"]`. When the update carries
    `is_last=True` the node also appends "You've reached your daily image limit".

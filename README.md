@@ -24,6 +24,7 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
   | `CLOUDFLARE_API_TOKEN` | https://dash.cloudflare.com/profile/api-tokens (Workers AI read permission) |
   | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard, Workers & Pages, Account ID |
   | `DATABASE_URL` | Neon dashboard → Connection Details (direct, no `-pooler`), for RAG storage |
+  | `NEON_AUTH_JWKS_URL` | Neon dashboard → Auth (JWKS endpoint, used to verify request JWTs) |
 
 - **Run the app:**
 
@@ -42,6 +43,7 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
 | `CLOUDFLARE_API_TOKEN` | For images | Cloudflare API token used to call Workers AI image models |
 | `CLOUDFLARE_ACCOUNT_ID` | For images | Cloudflare account id that owns the Workers AI models |
 | `DATABASE_URL` | For RAG | Neon Postgres connection string used to store and retrieve embedded chunks |
+| `NEON_AUTH_JWKS_URL` | Yes | Neon Auth JWKS endpoint for JWT verification — found in Neon dashboard → Auth |
 
 ## Architecture
 
@@ -68,10 +70,10 @@ The pipeline is orchestrated with LangGraph (`src/graph/`):
   provider into the other provider's models, yielding a status update per attempt.
   Per-user request and token limits live in `src/llm/security.py`.
 - **Images** (`src/chains/`): `image_node` is async, so the graph must be invoked
-  with `await graph.ainvoke()`. It combines the scene description with the
-  platform's `IMAGE_STYLE` and streams it through `run_image_with_fallback`, which
-  tries Cloudflare models in turn until one returns an image. Rate limits live in
-  `src/chains/image_security.py`.
+  with `await graph.ainvoke()`. It streams the extracted scene description (which
+  already carries the platform's `IMAGE_STYLE` from the prompt) through
+  `run_image_with_fallback`, which tries Cloudflare models in turn until one
+  returns an image. Rate limits live in `src/chains/image_security.py`.
 
 The frontend is planned as a Gradio UI. RAG is live with two pipelines (arXiv for
 Medium/Substack, BBC news for LinkedIn) — see [docs/rag.md](docs/rag.md) for how

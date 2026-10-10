@@ -1,7 +1,6 @@
 import os
 
 import jwt
-from markdown_it import MarkdownIt
 from markdownify import markdownify
 
 from src.chains.image_fallback import run_image_with_fallback
@@ -9,10 +8,6 @@ from src.graph.enums import Platform
 from src.graph.state import ContentState
 from src.llm.fallback import run_with_fallback
 from src.prompts.base import build_prompt
-from src.prompts.instagram import IMAGE_STYLE as INSTAGRAM_IMAGE_STYLE
-from src.prompts.linkedin import IMAGE_STYLE as LINKEDIN_IMAGE_STYLE
-from src.prompts.medium import IMAGE_STYLE as MEDIUM_IMAGE_STYLE
-from src.prompts.substack import IMAGE_STYLE as SUBSTACK_IMAGE_STYLE
 from src.rag.arxiv_fetcher import fetch_arxiv_papers
 from src.rag.bbc_fetcher import fetch_bbc_articles
 from src.rag.chunker import chunk_text
@@ -26,8 +21,6 @@ from src.rag.store import (
     topic_is_cached,
 )
 from src.rag.utils import make_topic_slug
-
-_md = MarkdownIt()
 
 
 def _to_plain_text(text: str) -> str:
@@ -99,14 +92,6 @@ def get_user_id(token: str) -> str:
         options={"verify_aud": False},
     )
     return payload["sub"]
-
-
-_PLATFORM_IMAGE_STYLES = {
-    Platform.LINKEDIN: LINKEDIN_IMAGE_STYLE,
-    Platform.INSTAGRAM: INSTAGRAM_IMAGE_STYLE,
-    Platform.MEDIUM: MEDIUM_IMAGE_STYLE,
-    Platform.SUBSTACK: SUBSTACK_IMAGE_STYLE,
-}
 
 
 def llm_node(state: ContentState) -> dict:
@@ -242,10 +227,9 @@ def news_rag_node(state: ContentState) -> dict:
 async def image_node(state: ContentState) -> dict:
     platform = state["platform"]
     topic = state["topic"]
-    image_style = _PLATFORM_IMAGE_STYLES[platform]
     status_messages = list(state["status_messages"])
 
-    prompt = f"{image_style} — {state['image_prompt']}, topic: {topic}"
+    prompt = f"{state['image_prompt']}, topic: {topic}"
 
     image_data = None
     async for update in run_image_with_fallback(
