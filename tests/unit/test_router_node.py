@@ -1,51 +1,26 @@
-from src.graph.enums import Platform, Provider
+from src.graph.enums import Platform, Provider, Tone
 from src.graph.nodes import router_node
 
 
 def base_state(**overrides):
     defaults = {
+        "token": "test-jwt-token",
         "topic": "AI",
         "platform": Platform.LINKEDIN,
         "audience": "professionals",
+        "tone": Tone.PROFESSIONAL,
         "language": "en",
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
-        "rag_enabled": None,
         "citations_enabled": None,
         "user_context": "",
-        "rag_context": "",
+        "rag_context": [],
         "generated_text": "",
         "image_data": None,
         "status_messages": [],
     }
     return {**defaults, **overrides}
-
-
-class TestRagDefaults:
-    def test_rag_defaults_false_for_linkedin(self):
-        result = router_node(base_state(platform=Platform.LINKEDIN, rag_enabled=None))
-        assert result["rag_enabled"] is False
-
-    def test_rag_defaults_false_for_instagram(self):
-        result = router_node(base_state(platform=Platform.INSTAGRAM, rag_enabled=None))
-        assert result["rag_enabled"] is False
-
-    def test_rag_defaults_true_for_medium(self):
-        result = router_node(base_state(platform=Platform.MEDIUM, rag_enabled=None))
-        assert result["rag_enabled"] is True
-
-    def test_rag_defaults_true_for_substack(self):
-        result = router_node(base_state(platform=Platform.SUBSTACK, rag_enabled=None))
-        assert result["rag_enabled"] is True
-
-    def test_rag_explicit_false_on_medium_is_respected(self):
-        result = router_node(base_state(platform=Platform.MEDIUM, rag_enabled=False))
-        assert result["rag_enabled"] is False
-
-    def test_rag_explicit_true_on_linkedin_is_respected(self):
-        result = router_node(base_state(platform=Platform.LINKEDIN, rag_enabled=True))
-        assert result["rag_enabled"] is True
 
 
 class TestCitationsDefaults:

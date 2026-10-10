@@ -21,9 +21,10 @@ https://console.groq.com/docs/rate-limits
 Live today through `src/llm/open_router.py`. The model list is discovered at import
 time by `get_available_models()`, which queries the OpenRouter models endpoint and
 keeps every id containing `:free`, falling back to `DEFAULT_MODEL`
-(`inclusionai/ling-3.0-flash-sante:free`) when the API is unreachable. Ids listed in
-`BLOCKED_MODELS` are filtered out, currently the models that answer 403 because they
-only run inside agentic harnesses. Browse the free catalog at
+(`qwen/qwen3.8-27b:free`) when the API is unreachable. Ids listed in
+`BLOCKED_MODELS` are filtered out: the models that answer 403 because they
+only run inside agentic harnesses, and the ones that failed live checks with
+persistent upstream 429s. Browse the free catalog at
 https://openrouter.ai/models?q=:free
 
 ### Fallback chain
@@ -45,6 +46,23 @@ generator yields "All models unavailable, please try again later".
 Only the first attempt is checked against the rate and token limits. Every retry
 after a failure passes `bypass_limits=True` so one cascade does not consume the
 user's budget twice.
+
+## Rate Limits
+
+`src/llm/security.py` guards every LLM call per user:
+
+| Limit | Constant | Value |
+| --- | --- | --- |
+| Requests per minute | `MAX_REQUESTS_PER_MINUTE` | 5 |
+| Requests per day | `MAX_REQUESTS_PER_DAY` | 200 |
+| Tokens per call | `MAX_TOKENS_PER_CALL` | 2000 |
+| Tokens per day | `MAX_TOKENS_PER_DAY` | 20000 |
+
+`check_rate_limit` runs before a request is sent, `check_token_limit` before the
+token spend is accepted, and `register_request` records the tokens used afterwards.
+Both checks take `bypass_limits=True`, which the fallback chain passes on retries so
+one cascade does not spend the budget twice. `get_user_stats(user_id)` reports the
+current minute and day usage plus tokens remaining.
 
 ## GitHub Secrets Required
 

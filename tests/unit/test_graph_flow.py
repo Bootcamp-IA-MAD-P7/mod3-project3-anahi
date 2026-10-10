@@ -3,22 +3,23 @@ from unittest.mock import patch
 import pytest
 
 from src.graph.builder import build_graph
-from src.graph.enums import Platform, Provider
+from src.graph.enums import Platform, Provider, Tone
 
 
 def base_input(**overrides):
     defaults = {
+        "token": "test-jwt-token",
         "topic": "quantum computing",
         "platform": Platform.LINKEDIN,
         "audience": "tech professionals",
+        "tone": Tone.PROFESSIONAL,
         "language": "en",
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
-        "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
-        "rag_context": "",
+        "rag_context": [],
         "generated_text": "",
         "image_data": None,
         "status_messages": [],
@@ -43,7 +44,18 @@ def mock_image_node(state):
 
 
 def mock_rag_node(state):
-    return {"rag_context": "mocked rag context"}
+    return {
+        "rag_context": [
+            {
+                "chunk_text": "mocked chunk",
+                "paper_id": "2401.00001",
+                "paper_title": "Mock Paper",
+                "authors": "Smith et al.",
+                "arxiv_url": "https://arxiv.org/abs/2401.00001",
+                "similarity": 0.95,
+            }
+        ]
+    }
 
 
 @pytest.fixture
@@ -55,17 +67,17 @@ def graph_with_mocks():
         patch("src.graph.builder.medium_node", mock_platform_node),
         patch("src.graph.builder.substack_node", mock_platform_node),
         patch("src.graph.builder.image_node", mock_image_node),
-        patch("src.graph.builder.rag_node", mock_rag_node),
+        patch("src.graph.builder.arxiv_rag_node", mock_rag_node),
+        patch("src.graph.builder.news_rag_node", mock_rag_node),
     ):
         yield build_graph()
 
 
 class TestGraphFlow:
-    def test_linkedin_no_rag_no_image(self, graph_with_mocks):
+    def test_linkedin_no_image(self, graph_with_mocks):
         result = graph_with_mocks.invoke(
             base_input(
                 platform=Platform.LINKEDIN,
-                rag_enabled=False,
                 image_enabled=False,
             )
         )
@@ -76,12 +88,12 @@ class TestGraphFlow:
         result = graph_with_mocks.invoke(
             base_input(
                 platform=Platform.MEDIUM,
-                rag_enabled=True,
                 image_enabled=False,
             )
         )
         assert result["generated_text"] != ""
-        assert result["rag_context"] == "mocked rag context"
+        assert isinstance(result["rag_context"], list)
+        assert result["rag_context"][0]["chunk_text"] == "mocked chunk"
 
     def test_instagram_forces_image(self, graph_with_mocks):
         result = graph_with_mocks.invoke(
@@ -105,7 +117,6 @@ class TestGraphFlow:
         result = graph_with_mocks.invoke(
             base_input(
                 platform=Platform.SUBSTACK,
-                rag_enabled=True,
                 image_enabled=False,
             )
         )

@@ -6,6 +6,7 @@ from src.prompts.messages import (
     build_language_instruction,
     build_rag_block,
     build_system_message,
+    build_tone_instruction,
     build_user_block,
 )
 
@@ -42,7 +43,7 @@ LENGTH:
 - Respect the inbox — longer than 1000 words and readers defer it to
   "read later" and never do
 
-TONE:
+SPIRIT:
 - First person — use "I" and "you" freely
 - Have an actual opinion and defend it — wishy-washy
   "on one hand, on the other hand" kills newsletters
@@ -52,7 +53,6 @@ TONE:
   beats "debugging can be frustrating"
 - Earned confidence — don't hedge every statement with "I think" or "maybe"
   unless genuine uncertainty is the point
-- Read it out loud test — if no human would ever say it out loud, rewrite it
 
 NEVER:
 - AI transition phrases: "Moreover", "Furthermore", "It is worth noting",
@@ -76,12 +76,12 @@ def build_substack_prompt(state: ContentState) -> list[BaseMessage]:
     parts = [
         f"Topic: {state['topic']}",
         f"Target audience: {state['audience']}",
+        build_tone_instruction(state["tone"]),
         build_language_instruction(state["language"]),
         build_user_block(state["user_context"]),
     ]
 
-    if state["rag_enabled"]:
-        parts.append(build_rag_block(state["rag_context"]))
+    parts.append(build_rag_block(state.get("rag_context", [])))
 
     if state["citations_enabled"]:
         parts.append(
@@ -93,8 +93,7 @@ def build_substack_prompt(state: ContentState) -> list[BaseMessage]:
         parts.append(
             "Include a scene description for the newsletter header image "
             "in this exact format:\n"
-            "[HEADER IMAGE: description of a scene that captures the mood "
-            "and topic of this newsletter]"
+            f"[HEADER IMAGE: {IMAGE_STYLE}]"
         )
 
     human = build_human_message(parts)

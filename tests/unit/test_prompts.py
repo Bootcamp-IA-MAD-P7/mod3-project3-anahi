@@ -1,11 +1,12 @@
 import pytest
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from src.graph.enums import Platform, Provider
+from src.graph.enums import Platform, Provider, Tone
 from src.prompts.base import build_prompt
 from src.prompts.instagram import build_instagram_prompt
 from src.prompts.linkedin import build_linkedin_prompt
 from src.prompts.medium import build_medium_prompt
+from src.prompts.messages import build_tone_instruction
 from src.prompts.substack import build_substack_prompt
 
 BUILDERS = {
@@ -19,25 +20,35 @@ PLATFORM_MARKERS = {
     Platform.LINKEDIN: ["HOOK", "BODY", "CALL TO ACTION"],
     Platform.INSTAGRAM: ["Contradiction & Contrast", "Specificity Effect", "POV"],
     Platform.MEDIUM: ["HEADLINE", "STRUCTURE", "FORMATTING"],
-    Platform.SUBSTACK: ["TITLE & SUBTITLE", "OPENING", "TONE"],
+    Platform.SUBSTACK: ["TITLE & SUBTITLE", "OPENING", "SPIRIT"],
 }
 
 PLATFORMS = list(Platform)
 
+MOCK_RAG_CHUNK = {
+    "chunk_text": "source one says X",
+    "paper_id": "2401.00001",
+    "paper_title": "Mock Paper",
+    "authors": "Smith et al.",
+    "arxiv_url": "https://arxiv.org/abs/2401.00001",
+    "similarity": 0.95,
+}
+
 
 def base_state(**overrides):
     defaults = {
+        "token": "test-jwt-token",
         "topic": "AI",
         "platform": Platform.LINKEDIN,
         "audience": "professionals",
+        "tone": Tone.PROFESSIONAL,
         "language": "en",
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
-        "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
-        "rag_context": "",
+        "rag_context": [],
         "generated_text": "",
         "image_data": None,
         "status_messages": [],
@@ -80,6 +91,16 @@ class TestHumanMessage:
         assert "Context about the author" not in human
 
 
+class TestToneInstruction:
+    @pytest.mark.parametrize("tone", list(Tone))
+    def test_tone_instruction_in_human_message(self, tone):
+        state = base_state(platform=Platform.LINKEDIN, tone=tone)
+        messages = build_linkedin_prompt(state)
+        description = build_tone_instruction(tone)
+        assert description in messages[1].content
+        assert description not in messages[0].content
+
+
 class TestSystemStructure:
     @pytest.mark.parametrize("platform,markers", PLATFORM_MARKERS.items())
     def test_contains_platform_markers(self, platform, markers):
@@ -93,29 +114,29 @@ class TestRagBlock:
         "platform",
         [Platform.LINKEDIN, Platform.MEDIUM, Platform.SUBSTACK],
     )
-    def test_includes_research_block_when_enabled(self, platform):
+    def test_includes_research_block(self, platform):
         state = base_state(
             platform=platform,
-            rag_enabled=True,
-            rag_context="source one says X",
+            rag_context=[MOCK_RAG_CHUNK],
         )
         human = BUILDERS[platform](state)[1].content
         assert "reference material" in human
         assert "source one says X" in human
+        assert "Mock Paper" in human
+        assert "Smith et al." in human
 
     @pytest.mark.parametrize(
         "platform",
         [Platform.LINKEDIN, Platform.MEDIUM, Platform.SUBSTACK],
     )
-    def test_omits_research_block_when_disabled(self, platform):
+    def test_omits_research_block_when_context_empty(self, platform):
         human = BUILDERS[platform](base_state(platform=platform))[1].content
         assert "reference material" not in human
 
     def test_instagram_ignores_rag(self):
         state = base_state(
             platform=Platform.INSTAGRAM,
-            rag_enabled=True,
-            rag_context="source one says X",
+            rag_context=[MOCK_RAG_CHUNK],
         )
         human = build_instagram_prompt(state)[1].content
         assert "reference material" not in human

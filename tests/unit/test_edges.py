@@ -6,22 +6,23 @@ from src.graph.builder import (
     _route_after_platform,
     _route_after_router,
 )
-from src.graph.enums import Platform, Provider
+from src.graph.enums import Platform, Provider, Tone
 
 
 def base_state(**overrides):
     defaults = {
+        "token": "test-jwt-token",
         "topic": "AI",
         "platform": Platform.LINKEDIN,
         "audience": "professionals",
+        "tone": Tone.PROFESSIONAL,
         "language": "en",
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
-        "rag_enabled": False,
         "citations_enabled": False,
         "user_context": "",
-        "rag_context": "",
+        "rag_context": [],
         "generated_text": "",
         "image_data": None,
         "status_messages": [],
@@ -30,11 +31,17 @@ def base_state(**overrides):
 
 
 class TestRouteAfterRouter:
-    def test_routes_to_rag_when_enabled(self):
-        assert _route_after_router(base_state(rag_enabled=True)) == "rag_node"
-
-    def test_routes_to_llm_when_rag_disabled(self):
-        assert _route_after_router(base_state(rag_enabled=False)) == "llm_node"
+    @pytest.mark.parametrize(
+        "platform,expected",
+        [
+            (Platform.MEDIUM, "arxiv_rag_node"),
+            (Platform.SUBSTACK, "arxiv_rag_node"),
+            (Platform.LINKEDIN, "news_rag_node"),
+            (Platform.INSTAGRAM, "llm_node"),
+        ],
+    )
+    def test_routes_to_correct_rag_node(self, platform, expected):
+        assert _route_after_router(base_state(platform=platform)) == expected
 
 
 class TestRouteAfterLlm:

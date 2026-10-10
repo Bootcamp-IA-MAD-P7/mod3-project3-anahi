@@ -6,6 +6,7 @@ from src.prompts.messages import (
     build_language_instruction,
     build_rag_block,
     build_system_message,
+    build_tone_instruction,
     build_user_block,
 )
 
@@ -62,18 +63,17 @@ def build_linkedin_prompt(state: ContentState) -> list[BaseMessage]:
     parts = [
         f"Topic: {state['topic']}",
         f"Target audience: {state['audience']}",
+        build_tone_instruction(state["tone"]),
         build_language_instruction(state["language"]),
         build_user_block(state["user_context"]),
     ]
 
-    if state["rag_enabled"]:
-        parts.append(build_rag_block(state["rag_context"]))
+    parts.append(build_rag_block(state.get("rag_context", [])))
 
     if state["image_enabled"]:
         parts.append(
             "Include a scene description for the post image in this exact format:\n"
-            "[HEADER IMAGE: description of a scene that captures the mood and "
-            "topic of this post]"
+            f"[HEADER IMAGE: {IMAGE_STYLE}]"
         )
 
     human = build_human_message(parts)
