@@ -144,34 +144,35 @@ MiniLM model at collection.
 
 ### Live integration results
 
-`RUN_LIVE_LLM_TESTS=1 uv run pytest tests/integration -m live -v` — the `live`
-marker excludes the RAG tests, so this run is groq + openrouter + image only.
-Run 2026-10-09:
+`RUN_LIVE_LLM_TESTS=1 uv run pytest tests/integration/test_openrouter.py -v`,
+run 2026-10-10 with `BLOCKED_MODELS` emptied so every free catalog model was
+tested:
 
-| Suite | Result |
+| Result | Count |
 |---|---|
-| `test_groq.py` | 3 / 3 passed |
-| `test_image_generation.py` | 5 / 5 passed |
-| `test_openrouter.py` | 9 / 14 passed |
-| **Total** | **17 passed, 5 failed** in 121.0s |
+| passed | 12 / 16 (85.0s) |
+| failed | 4 |
+| skipped | 0 — no model returned an empty response |
 
-That run predates the `BLOCKED_MODELS` fix below: the 4 blocked ids were
-removed from the model list, so `test_openrouter.py` now has 10 tests, not 14.
+Failures:
 
-The 5 failures:
+- **2 blocked — 403** `thinkingmachines/inkling:free` and
+  `thinkingmachines/inkling-small:free`: OpenRouter gates both to agentic
+  harnesses (`"only available on agentic harnesses"`), so plain chat always
+  gets 403. These 2 ids are back in `BLOCKED_MODELS`.
+- **2 transient — 429** `google/gemma-4-26b-a4b-it:free` and
+  `google/gemma-4-31b-it:free`: `upstream_provider_shared_pool` rate limits
+  from Google AI Studio. Not blocked — 429 is provider capacity, not a broken
+  model, and the daily workflow retries once before opening an issue.
 
-- **1 real failure** — `test_get_available_models_returns_free_models`:
-  `DEFAULT_MODEL` (`inclusionai/ling-3.0-flash-sante:free`) was no longer in
-  OpenRouter's free catalog. **Fixed:** the fallback default in
-  [src/llm/open_router.py](../src/llm/open_router.py) is now
-  `qwen/qwen3.8-27b:free`, which passed the live model test.
-- **4 transient failures** — model tests hitting upstream 429s from provider
-  shared pools (not code problems): `poolside/laguna-s-2.1:free`,
-  `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free`,
-  `google/gemma-4-26b-a4b-it:free`, `google/gemma-4-31b-it:free`.
-  Immediate retry: `poolside` passed, the other 3 were still 429 at that
-  moment. **Fixed:** all 4 ids are now in `BLOCKED_MODELS`, so
-  `get_available_models()` excludes them and the daily workflow no longer
-  tests them.
+Also confirmed in this run:
+
+- `DEFAULT_MODEL` (`nvidia/nemotron-3.5-lightning:free`) is present in the free
+  catalog and generated successfully.
+- `poolside/laguna-s-2.1:free` and
+  `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` passed — both were in
+  the old blocked list and are now unblocked.
+- Embedding models are excluded by `get_available_models()`; all 15 catalog
+  entries tested are chat models.
 
 Ruff passes on the whole suite (`.pre-commit-config.yaml` runs it on commit).

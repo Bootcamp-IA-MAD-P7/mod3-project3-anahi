@@ -16,6 +16,8 @@ from src.llm.open_router import (
     OpenRouterClient,
 )
 
+FALLBACK_MODEL = "openrouter/free"
+
 
 @dataclass
 class FallbackUpdate:
@@ -87,6 +89,15 @@ def run_with_fallback(
             yield FallbackUpdate(
                 status=f"Model {model} unavailable, trying {next_model}..."
             )
+
+    yield FallbackUpdate(status=f"Trying fallback model {FALLBACK_MODEL}...")
+    try:
+        client = OpenRouterClient(model=FALLBACK_MODEL)
+        result = client.generate(prompt, user_id, bypass_limits)
+        yield FallbackUpdate(status=f"Generated with {FALLBACK_MODEL}", result=result)
+        return
+    except Exception:
+        pass
 
     yield FallbackUpdate(status="All models unavailable, please try again later")
 
