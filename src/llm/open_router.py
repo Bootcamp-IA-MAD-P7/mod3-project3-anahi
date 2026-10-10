@@ -11,11 +11,15 @@ from src.llm.security import (
     register_request,
 )
 
-DEFAULT_MODEL = "inclusionai/ling-3.0-flash-sante:free"
+DEFAULT_MODEL = "qwen/qwen3.8-27b:free"
 
 BLOCKED_MODELS = {
     "thinkingmachines/inkling:free",
     "thinkingmachines/inkling-small:free",
+    "poolside/laguna-s-2.1:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "google/gemma-4-31b-it:free",
 }
 
 

@@ -1,4 +1,6 @@
-from markdown_it import MarkdownIt
+import os
+
+import jwt
 from markdownify import markdownify
 
 from src.chains.image_fallback import run_image_with_fallback
@@ -6,12 +8,19 @@ from src.graph.enums import Platform
 from src.graph.state import ContentState
 from src.llm.fallback import run_with_fallback
 from src.prompts.base import build_prompt
-from src.prompts.instagram import IMAGE_STYLE as INSTAGRAM_IMAGE_STYLE
-from src.prompts.linkedin import IMAGE_STYLE as LINKEDIN_IMAGE_STYLE
-from src.prompts.medium import IMAGE_STYLE as MEDIUM_IMAGE_STYLE
-from src.prompts.substack import IMAGE_STYLE as SUBSTACK_IMAGE_STYLE
-
-_md = MarkdownIt()
+from src.rag.arxiv_fetcher import fetch_arxiv_papers
+from src.rag.bbc_fetcher import fetch_bbc_articles
+from src.rag.chunker import chunk_text
+from src.rag.cleaner import clean_text
+from src.rag.embedder import embed_chunks, model
+from src.rag.pdf_parser import parse_pdf
+from src.rag.store import (
+    find_similar_slug,
+    retrieve_chunks,
+    store_chunks,
+    topic_is_cached,
+)
+from src.rag.utils import make_topic_slug
 
 
 def _to_plain_text(text: str) -> str:
@@ -58,10 +67,6 @@ def router_node(state: ContentState) -> dict:
     platform = state["platform"]
     image_enabled = state["image_enabled"]
 
-    rag_enabled = state.get("rag_enabled")
-    if rag_enabled is None:
-        rag_enabled = platform in (Platform.MEDIUM, Platform.SUBSTACK)
-
     citations_enabled = state.get("citations_enabled")
     if citations_enabled is None:
         citations_enabled = False
@@ -72,20 +77,21 @@ def router_node(state: ContentState) -> dict:
         image_enabled = True
 
     return {
-        "rag_enabled": rag_enabled,
         "citations_enabled": citations_enabled,
         "image_enabled": image_enabled,
     }
 
 
-_DEFAULT_USER_ID = "default-user"
-
-_PLATFORM_IMAGE_STYLES = {
-    Platform.LINKEDIN: LINKEDIN_IMAGE_STYLE,
-    Platform.INSTAGRAM: INSTAGRAM_IMAGE_STYLE,
-    Platform.MEDIUM: MEDIUM_IMAGE_STYLE,
-    Platform.SUBSTACK: SUBSTACK_IMAGE_STYLE,
-}
+def get_user_id(token: str) -> str:
+    jwks_client = jwt.PyJWKClient(os.environ["NEON_AUTH_JWKS_URL"])
+    signing_key = jwks_client.get_signing_key_from_jwt(token)
+    payload = jwt.decode(
+        token,
+        signing_key.key,
+        algorithms=["RS256"],
+        options={"verify_aud": False},
+    )
+    return payload["sub"]
 
 
 def llm_node(state: ContentState) -> dict:
@@ -96,7 +102,7 @@ def llm_node(state: ContentState) -> dict:
     for update in run_with_fallback(
         selected_model=state["model"],
         prompt=messages,
-        user_id=_DEFAULT_USER_ID,
+        user_id=get_user_id(state["token"]),
         provider=state["provider"],
     ):
         status_messages.append(update.status)
@@ -113,23 +119,123 @@ def llm_node(state: ContentState) -> dict:
     }
 
 
-def rag_node(state: ContentState) -> dict:
-    raise NotImplementedError
+def arxiv_rag_node(state: ContentState) -> dict:
+    user_topic = state["topic"]
+    slug = make_topic_slug(user_topic)
+
+    try:
+        cached_slug = find_similar_slug(slug)
+
+        if cached_slug:
+            slug = cached_slug
+        else:
+            if not topic_is_cached(slug):
+                papers = fetch_arxiv_papers(user_topic)
+                all_chunks = []
+                for paper in papers:
+                    text = parse_pdf(paper["pdf_url"])
+                    text = clean_text(text)
+                    chunks = chunk_text(text, slug, paper)
+                    chunks = embed_chunks(chunks)
+                    all_chunks.extend(chunks)
+                store_chunks(all_chunks)
+
+        encoded = model.encode([user_topic])
+        query_embedding = (
+            encoded[0].tolist() if hasattr(encoded[0], "tolist") else list(encoded[0])
+        )
+        results = retrieve_chunks(slug, query_embedding, 3)
+        if not results:
+            msg = (
+                "No relevant arXiv articles found for this topic, "
+                "generating without RAG context."
+            )
+            status_messages = list(state.get("status_messages", []))
+            status_messages.append(msg)
+            return {
+                **state,
+                "rag_context": [],
+                "rag_status": msg,
+                "status_messages": status_messages,
+            }
+        return {**state, "rag_context": results, "rag_status": None}
+
+    except Exception as e:
+        msg = (
+            "ArXiv articles unavailable for this topic, "
+            f"generating without RAG context. ({type(e).__name__}: {e})"
+        )
+        status_messages = list(state.get("status_messages", []))
+        status_messages.append(msg)
+        return {
+            **state,
+            "rag_context": [],
+            "rag_status": msg,
+            "status_messages": status_messages,
+        }
+
+
+def news_rag_node(state: ContentState) -> dict:
+    user_topic = state["topic"]
+
+    try:
+        articles = fetch_bbc_articles(user_topic, top_k=3)
+
+        if not articles:
+            msg = (
+                "No relevant BBC articles found for this topic, "
+                "generating without news context."
+            )
+            status_messages = list(state.get("status_messages", []))
+            status_messages.append(msg)
+            return {
+                **state,
+                "rag_context": [],
+                "rag_status": msg,
+                "status_messages": status_messages,
+            }
+
+        rag_context = [
+            {
+                "chunk_text": f"{a['title']}. {a['summary']}",
+                "paper_id": a["url"],
+                "paper_title": a["title"],
+                "authors": "BBC News",
+                "arxiv_url": a["url"],
+                "similarity": 0.0,
+            }
+            for a in articles
+        ]
+
+        return {**state, "rag_context": rag_context, "rag_status": None}
+
+    except Exception as e:
+        msg = (
+            "News sources unavailable, "
+            f"generating without news context. ({type(e).__name__}: {e})"
+        )
+        status_messages = list(state.get("status_messages", []))
+        status_messages.append(msg)
+        return {
+            **state,
+            "rag_context": [],
+            "rag_status": msg,
+            "status_messages": status_messages,
+        }
 
 
 async def image_node(state: ContentState) -> dict:
     platform = state["platform"]
     topic = state["topic"]
-    image_style = _PLATFORM_IMAGE_STYLES[platform]
     status_messages = list(state["status_messages"])
 
-    prompt = f"{image_style} — {state['image_prompt']}, topic: {topic}"
+    prompt = f"{state['image_prompt']}, topic: {topic}"
 
     image_data = None
     async for update in run_image_with_fallback(
         prompt=prompt,
         platform=platform,
-        user_id=_DEFAULT_USER_ID,
+        user_id=get_user_id(state["token"]),
     ):
         status_messages.append(update.status)
         if update.result is not None:
@@ -192,9 +298,7 @@ def substack_node(state: ContentState) -> dict:
     image_prompt = ""
 
     if state["image_enabled"]:
-        text, image_prompt = _extract_image_prompt(
-            text, prefix="[HEADER IMAGE: illustration style —"
-        )
+        text, image_prompt = _extract_image_prompt(text, prefix="[HEADER IMAGE:")
 
     return {
         "generated_text": text,

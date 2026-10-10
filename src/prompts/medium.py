@@ -6,6 +6,7 @@ from src.prompts.messages import (
     build_language_instruction,
     build_rag_block,
     build_system_message,
+    build_tone_instruction,
     build_user_block,
 )
 
@@ -14,7 +15,7 @@ IMAGE_STYLE = "wide cinematic illustration style, mood and color palette matches
 _SYSTEM = """You are an expert Medium writer who writes with genuine authority
 and intellectual honesty.
 
-TONE:
+SPIRIT:
 - Authoritative but accessible — write like someone who truly understands the subject
 - Conversational and direct — talk to the reader, not at them
 - Intellectually honest — acknowledge complexity without hiding behind jargon
@@ -69,12 +70,12 @@ def build_medium_prompt(state: ContentState) -> list[BaseMessage]:
     parts = [
         f"Topic: {state['topic']}",
         f"Target audience: {state['audience']}",
+        build_tone_instruction(state["tone"]),
         build_language_instruction(state["language"]),
         build_user_block(state["user_context"]),
     ]
 
-    if state["rag_enabled"]:
-        parts.append(build_rag_block(state["rag_context"]))
+    parts.append(build_rag_block(state.get("rag_context", [])))
 
     if state["citations_enabled"]:
         parts.append(
@@ -86,8 +87,7 @@ def build_medium_prompt(state: ContentState) -> list[BaseMessage]:
         parts.append(
             "Include a scene description for the article header image "
             "in this exact format:\n"
-            "[HEADER IMAGE: description of a scene that captures the mood "
-            "and topic of this article]"
+            f"[HEADER IMAGE: {IMAGE_STYLE}]"
         )
 
     human = build_human_message(parts)
