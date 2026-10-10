@@ -4,9 +4,9 @@ pytest suite — offline by default, external services gated behind markers.
 
 ## Layout
 
-126 tests total: 96 unit, 30 integration.
+137 tests total: 106 unit, 31 integration.
 
-### Unit (`tests/unit/`, 96 tests)
+### Unit (`tests/unit/`, 106 tests)
 
 All mocked, no network, no API keys.
 
@@ -23,14 +23,16 @@ All mocked, no network, no API keys.
 | `test_image_node.py` | 4 | `image_node` streaming, status messages, daily limit message |
 | `test_graph_compilation.py` | 2 | Graph compiles, expected nodes registered |
 | `test_config.py` | 2 | Settings and env loading |
+| `test_backend.py` | 10 | FastAPI backend in [app.py](../app.py): `/health`, 401s without/with a bad token, `/me` context read, `POST`/`PUT` `/me/context` upserts, `/generate` SSE happy path (mocked `graph.astream`) and the "All models failed" error event. JWT, DB and graph fully mocked via `patch("app.<name>")` |
 
-### Integration (`tests/integration/`, 30 tests)
+### Integration (`tests/integration/`, 31 tests)
 
 | File | Tests | Marker | What it does |
 |---|---|---|---|
 | `test_arxiv_rag_integration.py` | 1 | `integration` + `slow` | Real pipeline: arXiv fetch → PDF download/parse → clean → chunk → embed (384 dims). No DB writes |
 | `test_news_rag_integration.py` | 1 | `integration` | Real BBC RSS fetch + semantic ranking via `fetch_bbc_articles` |
 | `test_db_integration.py` | 10 | `integration` | Real Neon DB, no mocks: cache check, store + retrieve, fuzzy slug match, direct `search_chunks` call, `user_profiles` insert and `updated_at` trigger, `get_user_context` / `upsert_user_context` round-trips |
+| `test_backend_integration.py` | 1 | `integration` | End-to-end `/generate` through the real graph with a real Neon Auth JWT, streams the SSE response with `httpx.AsyncClient` and asserts a non-empty result. Skips without `NEON_AUTH_TEST_TOKEN` |
 | `test_openrouter.py` | 10 | `live` | Every OpenRouter free model hits the real API |
 | `test_image_generation.py` | 5 | `live` | Every Cloudflare image model generates a real image |
 | `test_groq.py` | 3 | `live` | Every Groq model hits the real API |
@@ -62,6 +64,16 @@ list, which psycopg2 renders as `ARRAY[...]` (`numeric[]`). pgvector's
 worked (assignment context) but every retrieval failed. Fixed with an explicit
 cast in [src/rag/store.py](../src/rag/store.py): `search_chunks(%s, %s::vector, %s)`.
 
+#### Backend integration test
+
+[test_backend_integration.py](../tests/integration/test_backend_integration.py)
+calls `POST /generate` against the real graph with a real Neon Auth JWT and
+streams the SSE response. It needs `NEON_AUTH_TEST_TOKEN` in the environment
+(export it the same way as `DATABASE_URL`, it is also in `.env.example`),
+otherwise the module skips via `pytestmark`. It also needs `GROQ_API_KEY` and
+`OPENROUTER_API_KEY` in `.env` because the real graph calls real LLMs. The unit
+suite covers the same endpoint with everything mocked and needs no secrets.
+
 ## Markers
 
 Defined in [pyproject.toml](../pyproject.toml):
@@ -78,35 +90,37 @@ Defined in [pyproject.toml](../pyproject.toml):
 uv run pytest                             # default: everything, live tests skipped
 uv run pytest -m "not integration"        # CI path: unit only
 uv run pytest -m integration              # RAG network tests + Neon DB tests
+uv run pytest tests/unit/test_backend.py  # backend API tests, all mocked
 uv run pytest tests/integration -m live   # live tests (needs RUN_LIVE_LLM_TESTS=1 + keys)
 ```
 
 The default run needs no keys and no network for the unit tests; the two RAG
 `integration` tests hit the network (arXiv + BBC) and load the embedding model,
 adding roughly 45 seconds. The 10 DB tests run only when `DATABASE_URL` is
-exported, otherwise they skip and the default run is network-free.
+exported and the backend integration test only when `NEON_AUTH_TEST_TOKEN` is,
+otherwise they skip and the default run is network-free.
 
 ## Results
 
-Last run, 2026-10-09 (with `DATABASE_URL` exported):
+Last run, 2026-10-10 (no `DATABASE_URL`, no `NEON_AUTH_TEST_TOKEN`):
 
 | Command | Result |
 |---|---|
-| `uv run pytest -q` | **108 passed, 18 skipped** in 53.6s |
-| `uv run pytest -q -m "not integration"` | **96 passed, 18 skipped, 12 deselected** in 36.3s |
-| `uv run pytest -m integration -v` | **12 passed, 114 deselected** in 47.3s |
-| `uv run pytest -m integration -q` (no `DATABASE_URL`) | **2 passed, 10 skipped, 114 deselected** in 40.9s |
+| `uv run pytest -q -m "not integration"` | **106 passed, 19 skipped, 13 deselected** in 39.1s |
+| `uv run pytest -q -m integration` | **2 passed, 11 skipped, 125 deselected** in 43.0s |
+| `uv run pytest tests/unit/test_backend.py -v` | **10 passed** in 37.7s |
 
 ### What the skips and deselections mean
 
-- **18 skipped** — the `live` tests (`test_groq.py`, `test_openrouter.py`,
-  `test_image_generation.py`): 3 + 10 + 5. They carry
+- **19 skipped** — the `live` tests (`test_groq.py`, `test_openrouter.py`,
+  `test_image_generation.py`): 3 + 11 + 5. They carry
   `skipif(RUN_LIVE_LLM_TESTS != "1")`, so without that env var every run skips
   them. They are not broken, they are waiting for an opt-in.
-- **+10 skipped** — `test_db_integration.py` when `DATABASE_URL` is not in the
-  environment. Same opt-in pattern, different gate.
-- **12 deselected** — the 12 `integration` tests (2 RAG + 10 DB). `-m "not
-  integration"` is a *filter expression*, not a failure: pytest counts
+- **+11 skipped** — `test_db_integration.py` (10, needs `DATABASE_URL`) and
+  `test_backend_integration.py` (1, needs `NEON_AUTH_TEST_TOKEN`). Same opt-in
+  pattern, different gates.
+- **13 deselected** — the 13 `integration` tests (2 RAG + 10 DB + 1 backend).
+  `-m "not integration"` is a *filter expression*, not a failure: pytest counts
   filtered-out tests as "deselected". The CI path excludes them on purpose so
   the default PR check needs no network and no database.
 
