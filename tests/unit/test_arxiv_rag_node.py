@@ -46,14 +46,13 @@ def base_state(**overrides):
 
 
 @patch("src.graph.nodes.retrieve_chunks", return_value=[MOCK_CHUNK])
-@patch("src.graph.nodes.model")
+@patch("src.graph.nodes.embed_query", return_value=MOCK_EMBEDDING)
 @patch("src.graph.nodes.topic_is_cached", return_value=True)
 @patch("src.graph.nodes.find_similar_slug", return_value=None)
 @patch("src.graph.nodes.fetch_arxiv_papers")
 def test_cache_hit_exact(
-    mock_fetch, mock_similar, mock_cached, mock_model, mock_retrieve
+    mock_fetch, mock_similar, mock_cached, mock_embed_query, mock_retrieve
 ):
-    mock_model.encode.return_value = [MOCK_EMBEDDING]
     state = base_state()
     result = arxiv_rag_node(state)
 
@@ -66,11 +65,10 @@ def test_cache_hit_exact(
 
 
 @patch("src.graph.nodes.retrieve_chunks", return_value=[MOCK_CHUNK])
-@patch("src.graph.nodes.model")
+@patch("src.graph.nodes.embed_query", return_value=MOCK_EMBEDDING)
 @patch("src.graph.nodes.topic_is_cached")
 @patch("src.graph.nodes.find_similar_slug", return_value="quantum-computers")
-def test_cache_hit_fuzzy(mock_similar, mock_cached, mock_model, mock_retrieve):
-    mock_model.encode.return_value = [MOCK_EMBEDDING]
+def test_cache_hit_fuzzy(mock_similar, mock_cached, mock_embed_query, mock_retrieve):
     state = base_state()
     result = arxiv_rag_node(state)
 
@@ -91,13 +89,13 @@ def test_cache_hit_fuzzy(mock_similar, mock_cached, mock_model, mock_retrieve):
 @patch("src.graph.nodes.clean_text", return_value="cleaned text")
 @patch("src.graph.nodes.parse_pdf", return_value="raw text")
 @patch("src.graph.nodes.fetch_arxiv_papers", return_value=[MOCK_PAPER])
-@patch("src.graph.nodes.model")
+@patch("src.graph.nodes.embed_query", return_value=MOCK_EMBEDDING)
 @patch("src.graph.nodes.topic_is_cached", return_value=False)
 @patch("src.graph.nodes.find_similar_slug", return_value=None)
 def test_cold_path(
     mock_similar,
     mock_cached,
-    mock_model,
+    mock_embed_query,
     mock_fetch,
     mock_parse,
     mock_clean,
@@ -115,7 +113,6 @@ def test_cold_path(
     manager.attach_mock(mock_store, "store")
     manager.attach_mock(mock_retrieve, "retrieve")
 
-    mock_model.encode.return_value = [MOCK_EMBEDDING]
     state = base_state()
     result = arxiv_rag_node(state)
 
@@ -140,14 +137,13 @@ def test_cold_path(
 
 
 @patch("src.graph.nodes.retrieve_chunks", return_value=[MOCK_CHUNK])
-@patch("src.graph.nodes.model")
+@patch("src.graph.nodes.embed_query", return_value=MOCK_EMBEDDING)
 @patch("src.graph.nodes.topic_is_cached", return_value=False)
 @patch("src.graph.nodes.find_similar_slug", return_value=None)
 @patch("src.graph.nodes.fetch_arxiv_papers", side_effect=Exception("arXiv timeout"))
 def test_failure_degrades_gracefully(
-    mock_fetch, mock_similar, mock_cached, mock_model, mock_retrieve
+    mock_fetch, mock_similar, mock_cached, mock_embed_query, mock_retrieve
 ):
-    mock_model.encode.return_value = [MOCK_EMBEDDING]
     state = base_state()
     result = arxiv_rag_node(state)
 

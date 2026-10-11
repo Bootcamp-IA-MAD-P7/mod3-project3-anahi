@@ -12,7 +12,7 @@ from src.rag.arxiv_fetcher import fetch_arxiv_papers
 from src.rag.bbc_fetcher import fetch_bbc_articles
 from src.rag.chunker import chunk_text
 from src.rag.cleaner import clean_text
-from src.rag.embedder import embed_chunks, model
+from src.rag.embedder import embed_chunks, embed_query
 from src.rag.pdf_parser import parse_pdf
 from src.rag.store import (
     find_similar_slug,
@@ -140,10 +140,7 @@ def arxiv_rag_node(state: ContentState) -> dict:
                     all_chunks.extend(chunks)
                 store_chunks(all_chunks)
 
-        encoded = model.encode([user_topic])
-        query_embedding = (
-            encoded[0].tolist() if hasattr(encoded[0], "tolist") else list(encoded[0])
-        )
+        query_embedding = embed_query(user_topic)
         results = retrieve_chunks(slug, query_embedding, 3)
         if not results:
             msg = (

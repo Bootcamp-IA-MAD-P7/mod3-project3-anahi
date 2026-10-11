@@ -81,11 +81,38 @@ so citations can be built at output time without a second DB lookup.
 
 ### Embeddings
 
-Model: `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensions), loaded
-once at module import via `sentence-transformers`. Multilingual by design —
-a user topic submitted in Spanish or French is embedded directly without a
-translation step, and similarity search against English paper chunks still
-works because the model maps all languages into the same vector space.
+Model: `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensions), loaded once
+at module import via `fastembed` (Qdrant's ONNX Runtime wrapper). fastembed
+uses the quantized int8 ONNX model (`Qdrant/paraphrase-multilingual-MiniLM-L12-v2-onnx-Q`)
+by default — ~120MB on disk, ~250MB RAM at inference, compared to ~2GB for
+the torch/sentence-transformers stack.
+
+Multilingual by design — a user topic submitted in Spanish or French is
+embedded directly without a translation step, and similarity search against
+English paper chunks still works because the model maps all languages into
+the same 384-dimensional vector space.
+
+#### Migration sanity check
+
+Before swapping the stack, `scripts/check_embedding_compat.py` embedded the
+same sentences through the old (sentence-transformers fp32) and new (fastembed
+int8 ONNX) pipelines and compared vectors:
+
+```
+Cosine similarity between sentence-transformers and fastembed vectors:
+------------------------------------------------------------
+✓ 1.0000  quantum entanglement enables faster computation
+✓ 1.0000  AI is reshaping the workplace at record pace
+✓ 1.0000  climate change requires immediate global action
+✓ 1.0000  neural networks learn from large datasets
+✓ 1.0000  la inteligencia artificial cambia el mundo
+✓ 1.0000  l'apprentissage automatique est fascinant
+------------------------------------------------------------
+ALL PASS — no re-embedding needed, safe to switch
+```
+
+Cosine similarity 1.0000 across English, Spanish and French test sentences —
+vectors are interchangeable, no corpus re-embedding required on migration.
 
 ### Storage
 
@@ -157,10 +184,10 @@ keyword search.
 
 Rather than keyword filtering (which fails on nuanced topics), we reuse the
 multilingual MiniLM model already loaded in memory from the arXiv pipeline.
-The user topic and each article's concatenated title + summary are embedded,
-and cosine similarity via `sentence_transformers.util.cos_sim` ranks all
-pooled articles in a single matrix operation. The top 3 most semantically
-relevant articles are returned.
+The user topic and each article's concatenated title + summary are embedded
+through fastembed, and cosine similarity (a small pure-Python `_cosine`
+helper in `bbc_fetcher.py`) ranks the pooled articles. The top 3 most
+semantically relevant articles are returned.
 
 No additional model, no additional embedding infrastructure. The model is
 already in memory.

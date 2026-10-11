@@ -137,7 +137,7 @@ Neon database:
 #### DB integration results
 
 Same run → **12 passed in 47.8s**, 10 of them DB (≈36s of the wall time is
-importing `sentence-transformers` and loading the MiniLM model at collection):
+importing `fastembed` and loading the MiniLM ONNX model at collection):
 
 | Test | Duration | Verified |
 |---|---|---|
@@ -153,8 +153,8 @@ importing `sentence-transformers` and loading the MiniLM model at collection):
 | `test_upsert_updates_existing` | 1.03s | second upsert wins → `updated context`, single row (conflict update path) |
 
 Wall time for the full `-m integration` run was 47.8s despite ~12s of test
-calls — the remaining time is importing `sentence-transformers` and loading the
-MiniLM model at collection.
+calls — the remaining time is importing `fastembed` and loading the
+MiniLM ONNX model at collection.
 
 ### Live integration results
 

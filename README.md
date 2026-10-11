@@ -42,9 +42,10 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
   uv run uvicorn app:app --reload
   ```
 
-  > **Cold start warning:** first boot will be slow — MiniLM downloads on import
-  > (~400MB). HF Spaces caches it after the first run so subsequent cold starts
-  > are faster.
+  > **Cold start warning:** the embedding model
+  > (`paraphrase-multilingual-MiniLM-L12-v2`, int8 ONNX) is downloaded on first
+  > boot (~120MB). Subsequent cold starts load from cache (~1–2s). HF Spaces
+  > caches it after the first run so subsequent cold starts are faster.
 
 ## Environment Variables
 
@@ -81,6 +82,9 @@ The pipeline is orchestrated with LangGraph (`src/graph/`):
   secondary one; `src/llm/fallback.py` cascades from the selected model of either
   provider into the other provider's models, yielding a status update per attempt.
   Per-user request and token limits live in `src/llm/security.py`.
+- **Embeddings** (`src/rag/`): **fastembed** — lightweight ONNX-based
+  embedding (int8 quantized, no torch dependency), same multilingual MiniLM
+  model as before. Details in [docs/rag.md](docs/rag.md).
 - **Images** (`src/chains/`): `image_node` is async, so the graph must be invoked
   with `await graph.ainvoke()`. It streams the extracted scene description (which
   already carries the platform's `IMAGE_STYLE` from the prompt) through
