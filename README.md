@@ -1,3 +1,13 @@
+---
+title: SayMore
+emoji: 🌿
+colorFrom: pink
+colorTo: orange
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 # LLM LangGraph content generator
 
 Content generation pipeline that writes posts for Instagram, LinkedIn, Medium and
@@ -29,10 +39,12 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
 - **Run the app:**
 
   ```bash
-  uv run python app.py
+  uv run uvicorn app:app --reload
   ```
 
-  > Note: `app.py` is currently a stub, so the command starts without output yet.
+  > **Cold start warning:** first boot will be slow — MiniLM downloads on import
+  > (~400MB). HF Spaces caches it after the first run so subsequent cold starts
+  > are faster.
 
 ## Environment Variables
 
