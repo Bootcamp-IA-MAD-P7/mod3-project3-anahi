@@ -21,11 +21,17 @@ https://console.groq.com/docs/rate-limits
 Live today through `src/llm/open_router.py`. The model list is discovered at import
 time by `get_available_models()`, which queries the OpenRouter models endpoint and
 keeps every id containing `:free`, falling back to `DEFAULT_MODEL`
-(`qwen/qwen3.8-27b:free`) when the API is unreachable. Ids listed in
-`BLOCKED_MODELS` are filtered out: the models that answer 403 because they
-only run inside agentic harnesses, and the ones that failed live checks with
-persistent upstream 429s. Browse the free catalog at
-https://openrouter.ai/models?q=:free
+(`nvidia/nemotron-3.5-lightning:free`) when the API is unreachable. Ids listed in
+`BLOCKED_MODELS` are filtered out and the daily workflow does not test them:
+
+- the models that answer 403 because they only run inside agentic harnesses:
+  `thinkingmachines/inkling:free`, `thinkingmachines/inkling-small:free`
+- the flaky free tier models that fail live checks intermittently with upstream
+  429s and 502s: `google/gemma-4-26b-a4b-it:free`, `google/gemma-4-31b-it:free`,
+  `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` — they generate fine one
+  day and rate limit the next, so blocking them keeps the daily check green
+
+Browse the free catalog at https://openrouter.ai/models?q=:free
 
 ### Fallback chain
 

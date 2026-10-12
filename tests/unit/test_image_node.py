@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from src.chains.image_fallback import ImageFallbackUpdate
-from src.graph.enums import Platform, Provider, Tone
+from src.graph.enums import Language, Platform, Provider, Tone
 from src.graph.nodes import image_node
 
 
@@ -14,7 +14,7 @@ def base_state(**overrides):
         "platform": Platform.LINKEDIN,
         "audience": "professionals",
         "tone": Tone.PROFESSIONAL,
-        "language": "en",
+        "language": Language.EN,
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": True,

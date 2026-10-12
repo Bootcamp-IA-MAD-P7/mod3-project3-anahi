@@ -5,6 +5,7 @@ from src.graph.edges import (
     _route_after_llm,
     _route_after_platform,
     _route_after_router,
+    _route_after_translation,
 )
 from src.graph.nodes import (
     arxiv_rag_node,
@@ -16,6 +17,7 @@ from src.graph.nodes import (
     news_rag_node,
     router_node,
     substack_node,
+    translation_node,
 )
 from src.graph.state import ContentState
 
@@ -32,6 +34,7 @@ def build_graph() -> CompiledStateGraph:
     builder.add_node("medium_node", medium_node)
     builder.add_node("substack_node", substack_node)
     builder.add_node("image_node", image_node)
+    builder.add_node("translation_node", translation_node)
 
     builder.add_edge(START, "router_node")
     builder.add_conditional_edges("router_node", _route_after_router)
@@ -42,6 +45,7 @@ def build_graph() -> CompiledStateGraph:
     builder.add_conditional_edges("instagram_node", _route_after_platform)
     builder.add_conditional_edges("medium_node", _route_after_platform)
     builder.add_conditional_edges("substack_node", _route_after_platform)
+    builder.add_conditional_edges("translation_node", _route_after_translation)
     builder.add_edge("image_node", END)
 
     return builder.compile()

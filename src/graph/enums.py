@@ -18,3 +18,10 @@ class Tone(str, Enum):
     CASUAL = "casual"
     INSPIRATIONAL = "inspirational"
     TECHNICAL = "technical"
+
+
+class Language(str, Enum):
+    EN = "English"
+    ES = "Spanish"
+    FR = "French"
+    IT = "Italian"

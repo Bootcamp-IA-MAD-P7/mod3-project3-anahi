@@ -1,3 +1,13 @@
+---
+title: SayMore
+emoji: 🌿
+colorFrom: pink
+colorTo: orange
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 # LLM LangGraph content generator
 
 Content generation pipeline that writes posts for Instagram, LinkedIn, Medium and
@@ -29,10 +39,13 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
 - **Run the app:**
 
   ```bash
-  uv run python app.py
+  uv run uvicorn app:app --reload
   ```
 
-  > Note: `app.py` is currently a stub, so the command starts without output yet.
+  > **Cold start warning:** the embedding model
+  > (`paraphrase-multilingual-MiniLM-L12-v2`, int8 ONNX) is downloaded on first
+  > boot (~120MB). Subsequent cold starts load from cache (~1–2s). HF Spaces
+  > caches it after the first run so subsequent cold starts are faster.
 
 ## Environment Variables
 
@@ -69,6 +82,9 @@ The pipeline is orchestrated with LangGraph (`src/graph/`):
   secondary one; `src/llm/fallback.py` cascades from the selected model of either
   provider into the other provider's models, yielding a status update per attempt.
   Per-user request and token limits live in `src/llm/security.py`.
+- **Embeddings** (`src/rag/`): **fastembed** — lightweight ONNX-based
+  embedding (int8 quantized, no torch dependency), same multilingual MiniLM
+  model as before. Details in [docs/rag.md](docs/rag.md).
 - **Images** (`src/chains/`): `image_node` is async, so the graph must be invoked
   with `await graph.ainvoke()`. It streams the extracted scene description (which
   already carries the platform's `IMAGE_STYLE` from the prompt) through
@@ -80,6 +96,14 @@ Medium/Substack, BBC news for LinkedIn) — see [docs/rag.md](docs/rag.md) for h
 they work. Provider details, secrets and the daily model checks are documented in
 [docs/llm-setup.md](docs/llm-setup.md), the image pipeline in
 [docs/image-generation.md](docs/image-generation.md).
+
+### Supported languages
+
+English, Spanish, French, Italian.
+
+Adding a new language is a one-line change in `src/graph/enums.py` — no other
+code change needed. The translation pipeline handles everything downstream
+automatically.
 
 ## Running Tests
 

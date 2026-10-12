@@ -28,10 +28,6 @@ def build_tone_instruction(tone: Tone) -> str:
     return descriptions[tone]
 
 
-def build_language_instruction(language: str) -> str:
-    return f"Generate the content in {language}"
-
-
 def build_user_block(user_context: str) -> str:
     if not user_context:
         return ""
