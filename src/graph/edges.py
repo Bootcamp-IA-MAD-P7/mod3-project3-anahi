@@ -1,6 +1,6 @@
 from langgraph.graph import END
 
-from src.graph.enums import Platform
+from src.graph.enums import Language, Platform
 from src.graph.state import ContentState
 
 
@@ -24,6 +24,17 @@ def _route_after_llm(state: ContentState) -> str:
 
 
 def _route_after_platform(state: ContentState) -> str:
+    if (
+        state["platform"] != Platform.INSTAGRAM
+        and state.get("language", Language.EN) != Language.EN
+    ):
+        return "translation_node"
+    if state["image_enabled"]:
+        return "image_node"
+    return END
+
+
+def _route_after_translation(state: ContentState) -> str:
     if state["image_enabled"]:
         return "image_node"
     return END

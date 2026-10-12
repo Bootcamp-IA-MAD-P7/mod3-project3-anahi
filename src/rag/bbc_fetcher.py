@@ -1,12 +1,22 @@
-import feedparser
-from sentence_transformers import util
+import math
 
-from src.rag.embedder import model
+import feedparser
+
+from src.rag.embedder import embed_query, embed_texts
 
 BBC_FEEDS = [
     "http://feeds.bbci.co.uk/news/business/rss.xml",
     "http://feeds.bbci.co.uk/news/technology/rss.xml",
 ]
+
+
+def _cosine(a: list[float], b: list[float]) -> float:
+    dot = sum(x * y for x, y in zip(a, b))
+    norm_a = math.sqrt(sum(x * x for x in a))
+    norm_b = math.sqrt(sum(y * y for y in b))
+    if not norm_a or not norm_b:
+        return 0.0
+    return dot / (norm_a * norm_b)
 
 
 def _fetch_feed(url: str) -> list[dict]:
@@ -32,11 +42,13 @@ def _fetch_all_articles() -> list[dict]:
 
 
 def _rank_articles(topic: str, articles: list[dict], top_k: int = 3) -> list[dict]:
-    topic_embedding = model.encode(topic, convert_to_tensor=True)
+    topic_embedding = embed_query(topic)
     summaries = [f"{a['title']}. {a['summary']}" for a in articles]
-    article_embeddings = model.encode(summaries, convert_to_tensor=True)
-    scores = util.cos_sim(topic_embedding, article_embeddings)[0]
-    top_indices = scores.argsort(descending=True)[:top_k]
+    article_embeddings = embed_texts(summaries)
+    scores = [_cosine(topic_embedding, emb) for emb in article_embeddings]
+    top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[
+        :top_k
+    ]
     return [articles[i] for i in top_indices]
 
 

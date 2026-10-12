@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from src.graph.enums import Platform, Provider, Tone
+from src.graph.enums import Language, Platform, Provider, Tone
 from src.graph.nodes import news_rag_node
 
 MOCK_ARTICLE = {
@@ -18,7 +18,7 @@ def base_state(**overrides):
         "platform": Platform.LINKEDIN,
         "audience": "general public",
         "tone": Tone.PROFESSIONAL,
-        "language": "en",
+        "language": Language.EN,
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,

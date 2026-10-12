@@ -31,6 +31,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          existing=$(gh issue list --state open --label "model-check" \
+            --search "in:title Daily Groq model check failed" \
+            --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            echo "Issue #$existing already open, skipping"
+            exit 0
+          fi
           uv run python - <<'PY' > issue.md
           import re
           import xml.etree.ElementTree as ET
@@ -59,4 +66,5 @@ jobs:
           PY
           gh issue create \
             --title "Daily Groq model check failed" \
-            --body-file issue.md
+            --body-file issue.md \
+            --label "model-check"

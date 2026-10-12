@@ -1,7 +1,7 @@
 import pytest
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from src.graph.enums import Platform, Provider, Tone
+from src.graph.enums import Language, Platform, Provider, Tone
 from src.prompts.base import build_prompt
 from src.prompts.instagram import build_instagram_prompt
 from src.prompts.linkedin import build_linkedin_prompt
@@ -42,7 +42,7 @@ def base_state(**overrides):
         "platform": Platform.LINKEDIN,
         "audience": "professionals",
         "tone": Tone.PROFESSIONAL,
-        "language": "en",
+        "language": Language.EN,
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
@@ -67,17 +67,34 @@ class TestPromptShape:
 
 class TestHumanMessage:
     @pytest.mark.parametrize("platform", PLATFORMS)
-    def test_includes_topic_audience_and_language(self, platform):
+    def test_includes_topic_and_audience(self, platform):
         state = base_state(
             platform=platform,
             topic="quantum computing",
             audience="tech professionals",
-            language="es",
         )
         human = BUILDERS[platform](state)[1].content
         assert "Topic: quantum computing" in human
         assert "Target audience: tech professionals" in human
-        assert "Generate the content in es" in human
+
+    @pytest.mark.parametrize(
+        "platform",
+        [Platform.LINKEDIN, Platform.MEDIUM, Platform.SUBSTACK],
+    )
+    def test_omits_language_instruction_on_translated_platforms(self, platform):
+        state = base_state(platform=platform, language=Language.ES)
+        human = BUILDERS[platform](state)[1].content
+        assert "Generate the content in" not in human
+
+    def test_instagram_includes_language_instruction_when_not_english(self):
+        state = base_state(platform=Platform.INSTAGRAM, language=Language.ES)
+        human = build_instagram_prompt(state)[1].content
+        assert "Generate the content in Spanish" in human
+
+    def test_instagram_omits_language_instruction_when_english(self):
+        state = base_state(platform=Platform.INSTAGRAM, language=Language.EN)
+        human = build_instagram_prompt(state)[1].content
+        assert "Generate the content in" not in human
 
     @pytest.mark.parametrize("platform", PLATFORMS)
     def test_includes_user_context_when_set(self, platform):

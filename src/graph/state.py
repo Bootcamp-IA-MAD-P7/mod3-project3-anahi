@@ -1,6 +1,6 @@
 from typing import NotRequired, TypedDict
 
-from src.graph.enums import Platform, Provider, Tone
+from src.graph.enums import Language, Platform, Provider, Tone
 
 
 class RagChunk(TypedDict):
@@ -18,7 +18,7 @@ class ContentState(TypedDict):
     platform: Platform
     audience: str
     tone: Tone
-    language: str
+    language: Language
     model: str
     provider: Provider
     image_enabled: bool

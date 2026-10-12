@@ -1,11 +1,17 @@
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock .python-version ./
-RUN uv sync --frozen --no-install-project
+RUN pip install uv
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
 COPY . .
-RUN uv sync --frozen
 
-CMD ["uv", "run", "python", "app.py"]
+EXPOSE 8000
+
+ENV HOST=0.0.0.0
+ENV PORT=8000
+
+CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

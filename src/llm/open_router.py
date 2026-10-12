@@ -11,15 +11,14 @@ from src.llm.security import (
     register_request,
 )
 
-DEFAULT_MODEL = "qwen/qwen3.8-27b:free"
+DEFAULT_MODEL = "nvidia/nemotron-3.5-lightning:free"
 
 BLOCKED_MODELS = {
     "thinkingmachines/inkling:free",
     "thinkingmachines/inkling-small:free",
-    "poolside/laguna-s-2.1:free",
-    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
     "google/gemma-4-26b-a4b-it:free",
     "google/gemma-4-31b-it:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
 }
 
 
@@ -32,19 +31,19 @@ def get_available_models() -> list[str]:
             timeout=10,
         )
         if not response.ok:
-            return [DEFAULT_MODEL]
+            return []
         data = response.json()
-        models = [
-            m["id"]
-            for m in data["data"]
-            if ":free" in m["id"] and m["id"] not in BLOCKED_MODELS
+        models = [m["id"] for m in data["data"]]
+        return [
+            m
+            for m in models
+            if ":free" in m and "embed" not in m and m not in BLOCKED_MODELS
         ]
-        return models if models else [DEFAULT_MODEL]
     except Exception:
-        return [DEFAULT_MODEL]
+        return []
 
 
-AVAILABLE_MODELS = get_available_models()
+AVAILABLE_MODELS = get_available_models() or [DEFAULT_MODEL]
 
 
 class OpenRouterClient(BaseLLMClient):

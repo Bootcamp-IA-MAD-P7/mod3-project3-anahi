@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from src.graph.builder import build_graph
-from src.graph.enums import Platform, Provider, Tone
+from src.graph.enums import Language, Platform, Provider, Tone
 
 
 def base_input(**overrides):
@@ -13,7 +13,7 @@ def base_input(**overrides):
         "platform": Platform.LINKEDIN,
         "audience": "tech professionals",
         "tone": Tone.PROFESSIONAL,
-        "language": "en",
+        "language": Language.EN,
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
