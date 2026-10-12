@@ -418,5 +418,16 @@ fillProfile();
 initMenu();
 initLogin();
 initOnboarding();
+function initLogout() {
+  const btn = document.getElementById("logout-btn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(EMAIL_KEY);
+    window.location.href = "index.html";
+  });
+}
+
+initLogout();
 initSettings();
 initGenerate();
