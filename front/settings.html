@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SayLess — Settings</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="topbar-brand" href="generate.html">
+        <img
+          class="brand-logo"
+          src="../public/sayless-logo.png"
+          alt="SayLess"
+        />
+      </a>
+      <nav class="nav-tabs">
+        <a class="nav-tab" href="generate.html">Generate</a>
+        <a class="nav-tab is-active" href="settings.html">Settings</a>
+      </nav>
+    </header>
+
+    <main class="content">
+      <section class="workspace">
+        <div class="settings-head">
+          <div>
+            <p class="eyebrow">Settings</p>
+            <h1 class="ws-title">Your context</h1>
+            <p class="ws-sub">The background your drafts draw from</p>
+          </div>
+          <div class="settings-icon">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M4 7h9M18 7h2M4 17h3M12 17h8" />
+              <circle cx="15.5" cy="7" r="2.5" />
+              <circle cx="9.5" cy="17" r="2.5" />
+            </svg>
+          </div>
+        </div>
+
+        <label class="field-label" for="settings-context">Context copy</label>
+        <textarea
+          class="textarea textarea-settings"
+          id="settings-context"
+          placeholder="Share what you do, who you write for, and how you like to sound"
+        ></textarea>
+
+        <div class="ws-footer">
+          <p class="ws-caption">This context shapes every draft you generate</p>
+          <button class="btn btn-primary" type="button" id="save-btn">
+            Save changes
+          </button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

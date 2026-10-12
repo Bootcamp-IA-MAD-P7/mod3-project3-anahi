@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SayLess — Sign in</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body class="page-login">
+    <a class="brand login-brand" href="index.html">
+      <img class="brand-logo" src="../public/sayless-logo.png" alt="SayLess" />
+    </a>
+    <main class="login-card">
+      <div class="login-hero">
+        <img class="login-photo" src="../public/login-hero.jpg" alt="" />
+        <div class="login-wash"></div>
+        <div class="hero-copy">
+          <h2 class="hero-title">Your voice.<br />Room to grow.</h2>
+          <p class="hero-body">
+            Write posts that sound like you for the platforms your audience
+            already lives on
+          </p>
+          <p class="hero-italic">Made for meaningful words.</p>
+        </div>
+      </div>
+      <div class="login-panel">
+        <div class="login-col">
+          <p class="eyebrow">Your creative space</p>
+          <h1 class="login-h1">Welcome back</h1>
+          <p class="login-sub">
+            Good ideas start here. Sign in to make them yours.
+          </p>
+          <form id="login-form">
+            <div class="login-field">
+              <label class="login-label" for="email">Email address</label>
+              <input
+                class="login-input"
+                type="email"
+                id="email"
+                name="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
+            </div>
+            <div class="login-pw-row">
+              <label class="login-label" for="password">Password</label>
+              <button class="login-forgot" type="button" id="forgot-btn">
+                Forgot password?
+              </button>
+            </div>
+            <input
+              class="login-input"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Your password"
+              autocomplete="current-password"
+              required
+            />
+            <button class="btn-login" type="submit">Sign in</button>
+          </form>
+          <p class="login-new">
+            New?
+            <button type="button" id="signup-btn">Create an account</button>
+          </p>
+          <p class="login-tagline">
+            Bring the idea. We'll help you find the words.
+          </p>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
