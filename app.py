@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from src.graph.builder import graph
-from src.graph.enums import Platform, Provider, Tone
+from src.graph.enums import Language, Platform, Provider, Tone
 from src.rag.store import get_user_context, upsert_user_context
 
 
@@ -52,7 +52,7 @@ class GenerateRequest(BaseModel):
     platform: Platform
     tone: Tone
     audience: str
-    language: str
+    language: Language
     model: str
     provider: Provider
     image_enabled: bool = False

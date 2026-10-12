@@ -85,7 +85,7 @@ VALID_GENERATE_PAYLOAD = {
     "platform": "linkedin",
     "tone": "professional",
     "audience": "tech professionals",
-    "language": "en",
+    "language": "English",
     "model": "nvidia/nemotron-3.5-lightning:free",
     "provider": "openrouter",
     "image_enabled": False,

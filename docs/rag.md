@@ -238,3 +238,17 @@ that cost, because most users want the magic to happen, not make more decisions.
 So RAG is always on, the router is a pure function of platform, and the only
 remaining escape hatch is failure: if a pipeline cannot run, it degrades to an
 empty context and generation proceeds without grounding.
+
+## Language handling
+
+Content is generated in English by default. For non-English output on Medium,
+Substack and LinkedIn, a dedicated `translation_node` runs after the platform
+formatter and translates the fully formatted post using the same LLM fallback
+cascade. Instagram generates directly in the target language in one call —
+short emotional captions translate better natively than via a second pass.
+
+Hashtags are always kept in English regardless of output language.
+
+Adding a new language requires one change only: add a value to the `Language`
+enum in `src/graph/enums.py` with the full language name as the value
+(e.g. `ZH = "Chinese"`). No prompt, node, or graph changes needed.

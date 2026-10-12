@@ -1,9 +1,9 @@
 from langchain_core.messages import BaseMessage
 
+from src.graph.enums import Language
 from src.graph.state import ContentState
 from src.prompts.messages import (
     build_human_message,
-    build_language_instruction,
     build_system_message,
     build_tone_instruction,
     build_user_block,
@@ -56,7 +56,11 @@ def build_instagram_prompt(state: ContentState) -> list[BaseMessage]:
         f"Topic: {state['topic']}",
         f"Target audience: {state['audience']}",
         build_tone_instruction(state["tone"]),
-        build_language_instruction(state["language"]),
+        *(
+            [f"Generate the content in {state['language'].value}"]
+            if state["language"] != Language.EN
+            else []
+        ),
         build_user_block(state["user_context"]),
     ]
 

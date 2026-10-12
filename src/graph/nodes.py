@@ -4,10 +4,11 @@ import jwt
 from markdownify import markdownify
 
 from src.chains.image_fallback import run_image_with_fallback
-from src.graph.enums import Platform
+from src.graph.enums import Language, Platform
 from src.graph.state import ContentState
 from src.llm.fallback import run_with_fallback
 from src.prompts.base import build_prompt
+from src.prompts.messages import build_human_message, build_system_message
 from src.rag.arxiv_fetcher import fetch_arxiv_papers
 from src.rag.bbc_fetcher import fetch_bbc_articles
 from src.rag.chunker import chunk_text
@@ -111,6 +112,44 @@ def llm_node(state: ContentState) -> dict:
 
     if result is None:
         raise RuntimeError("All models failed — content could not be generated")
+
+    return {
+        "generated_text": result.text,
+        "status_messages": status_messages,
+        "model": result.model_name,
+    }
+
+
+def translation_node(state: ContentState) -> dict:
+    if state["language"] == Language.EN:
+        return {}
+
+    messages = [
+        build_system_message(
+            "You are a professional translator specialising in social media "
+            "and long-form content. Translate the following into "
+            f"{state['language'].value}. "
+            "Preserve tone, structure, formatting and platform conventions "
+            "exactly. Do not add, remove or rewrite content — only translate. "
+            "Keep all hashtags in English."
+        ),
+        build_human_message([state["generated_text"]]),
+    ]
+    status_messages = list(state["status_messages"])
+
+    result = None
+    for update in run_with_fallback(
+        selected_model=state["model"],
+        prompt=messages,
+        user_id=get_user_id(state["token"]),
+        provider=state["provider"],
+    ):
+        status_messages.append(update.status)
+        if update.result is not None:
+            result = update.result
+
+    if result is None:
+        return {"status_messages": status_messages}
 
     return {
         "generated_text": result.text,

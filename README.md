@@ -97,6 +97,14 @@ they work. Provider details, secrets and the daily model checks are documented i
 [docs/llm-setup.md](docs/llm-setup.md), the image pipeline in
 [docs/image-generation.md](docs/image-generation.md).
 
+### Supported languages
+
+English, Spanish, French, Italian.
+
+Adding a new language is a one-line change in `src/graph/enums.py` — no other
+code change needed. The translation pipeline handles everything downstream
+automatically.
+
 ## Running Tests
 
 Full breakdown, markers and latest results in [docs/tests.md](docs/tests.md).

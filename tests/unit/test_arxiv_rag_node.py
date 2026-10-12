@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch
 
-from src.graph.enums import Platform, Provider, Tone
+from src.graph.enums import Language, Platform, Provider, Tone
 from src.graph.nodes import arxiv_rag_node
 
 MOCK_CHUNK = {
@@ -30,7 +30,7 @@ def base_state(**overrides):
         "platform": Platform.MEDIUM,
         "audience": "general public",
         "tone": Tone.PROFESSIONAL,
-        "language": "en",
+        "language": Language.EN,
         "model": "openai/gpt-oss-120b",
         "provider": Provider.GROQ,
         "image_enabled": False,
