@@ -204,8 +204,15 @@ function initOnboarding() {
 function initSettings() {
   const area = document.getElementById("settings-context");
   if (!area) return;
+  let savedValue = "";
   loadContext().then((ctx) => {
-    if (ctx) area.value = ctx;
+    if (ctx) {
+      area.value = ctx;
+      savedValue = ctx;
+    }
+  });
+  document.getElementById("cancel-btn").addEventListener("click", () => {
+    area.value = savedValue;
   });
   document.getElementById("save-btn").addEventListener("click", async () => {
     if (!getToken()) {
@@ -213,9 +220,13 @@ function initSettings() {
       return;
     }
     try {
-      const error = await saveContext("PUT", area.value.trim());
+      const value = area.value.trim();
+      const error = await saveContext("PUT", value);
       if (error) toast(error);
-      else toast("Changes saved");
+      else {
+        savedValue = value;
+        toast("Changes saved");
+      }
     } catch {
       toast("Cannot reach the server");
     }

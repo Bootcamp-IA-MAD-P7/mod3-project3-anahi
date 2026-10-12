@@ -22,7 +22,7 @@
   --icon-on-clay: #fff3eb;
   --tagline-on-clay: #f0d9cf;
   --peach: #f5e7df;
-  --tab-active-bg: #e8caca;
+  --tab-active-bg: #0b1a1d;
   --bar-bg: rgba(255, 253, 250, 0.84);
   --card-bg: rgba(255, 254, 252, 0.87);
   --shadow-card: 4px 16px rgba(111, 78, 57, 0.025);
@@ -49,6 +49,8 @@
   --login-forgot: #795f54;
   --login-new: #725b51;
   --login-tagline: #4a3830;
+  --tip-olive: #0b1a1d;
+  --tip-soft: rgba(245, 237, 228, 0.58);
   --hero-body: #f5ddd3;
   --hero-italic: #f6e1d7;
   --hero-wash: linear-gradient(180deg, rgba(176, 97, 76, 0.42), rgba(74, 40, 32, 0.84));
@@ -158,6 +160,18 @@ button {
   flex: 1 0 auto;
 }
 
+.content-tall {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: min(1140px, 94vw);
+  margin: 0 auto;
+}
+
+.content-tall .settings-split {
+  flex: 1 0 auto;
+}
+
 .nav-tabs {
   display: flex;
   align-items: center;
@@ -167,18 +181,18 @@ button {
 .nav-tab {
   font-size: 11px;
   font-weight: 500;
-  color: var(--muted);
+  color: var(--clay);
   padding: 7px 13px;
   border-radius: var(--r-round);
 }
 
 .nav-tab:hover {
-  color: var(--dark);
+  color: var(--clay-deep);
 }
 
 .nav-tab.is-active {
   background: var(--tab-active-bg);
-  color: var(--clay);
+  color: var(--white);
   font-weight: 600;
 }
 
@@ -189,6 +203,25 @@ button {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--rust);
+}
+
+.page-head {
+  margin-bottom: 22px;
+}
+
+.page-title {
+  margin: 8px 0 7px;
+  font-family: var(--font-serif);
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.7px;
+  color: var(--dark);
+}
+
+.page-sub {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .workspace {
@@ -565,13 +598,6 @@ button {
   color: var(--muted);
 }
 
-.ws-caption {
-  margin: 0;
-  font-size: 9px;
-  font-style: italic;
-  color: var(--muted);
-}
-
 .gen-overlay {
   position: absolute;
   inset: 0;
@@ -745,27 +771,157 @@ body.is-generating .page-tail {
   border-top: 1px solid var(--border);
 }
 
-.settings-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+.textarea-settings {
+  min-height: 150px;
+  margin-top: 0;
 }
 
-.settings-icon {
+.settings-split {
+  display: flex;
+  align-items: stretch;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.settings-form {
+  flex: 1;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  background: var(--input-bg);
+}
+
+.settings-form-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-form-head .ws-title {
+  margin: 0;
+}
+
+.settings-lead {
+  margin: 10px 0 18px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.privacy-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.privacy-note svg {
   flex: none;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-icon);
-  background: var(--peach);
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.btn-clay {
+  background: var(--clay);
+  border: 1px solid var(--clay);
+  color: var(--white);
+}
+
+.btn-clay:hover {
+  background: var(--clay-hover);
+  border-color: var(--clay-hover);
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-1px);
+}
+
+.settings-tip {
+  position: relative;
+  flex: none;
+  width: 300px;
+  padding: 28px 26px 28px 20px;
+  background: var(--tip-olive);
+  overflow: hidden;
+  container-type: size;
+}
+
+.tip-photo {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+  width: 100%;
+  height: 60%;
+  object-fit: cover;
+  object-position: 50% 30%;
+  pointer-events: none;
+}
+
+.tip-content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 22px 26px;
+  pointer-events: none;
+}
+
+.tip-items {
+  position: absolute;
+  top: 63%;
+  left: 20px;
+  right: 26px;
+  z-index: 2;
+}
+
+.tip-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 25px;
+  font-size: clamp(24px, 6.4cqh, 38px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  color: var(--dark);
+}
+
+.tip-desc {
+  margin: 17px 0 20px;
+  font-size: 10px;
+  font-size: clamp(10px, 2.7cqh, 15px);
+  line-height: 1.6;
+  color: var(--white);
+}
+
+.tip-item {
+  margin-bottom: 13px;
+}
+
+.tip-label {
+  margin: 0;
+  font-size: 10px;
+  font-size: clamp(10px, 2.7cqh, 15px);
+  font-weight: 600;
   color: var(--clay);
 }
 
-.textarea-settings {
-  min-height: 122px;
-  margin-top: 18px;
+.tip-text {
+  margin: 3px 0 0;
+  font-size: 9px;
+  font-size: clamp(9px, 2.3cqh, 13px);
+  line-height: 1.5;
+  color: var(--tip-soft);
 }
 
 .onboard-card {
@@ -1091,7 +1247,67 @@ body.is-generating .page-tail {
   }
 }
 
+@media (min-width: 681px) {
+  .settings-form {
+    container-type: size;
+    padding: clamp(20px, 6.2cqh, 40px);
+  }
+
+  .settings-form .ws-title {
+    font-size: clamp(18px, 5.2cqh, 40px);
+  }
+
+  .settings-lead {
+    margin: clamp(10px, 2.8cqh, 26px) 0 clamp(14px, 4.2cqh, 34px);
+    font-size: clamp(10px, 2.8cqh, 20px);
+  }
+
+  .settings-form .field-label {
+    font-size: clamp(10px, 2.7cqh, 18px);
+  }
+
+  .textarea-settings {
+    flex: 1 1 auto;
+    min-height: clamp(150px, 30cqh, 400px);
+  }
+
+  .settings-form .hint {
+    font-size: clamp(9px, 2.4cqh, 16px);
+    margin-top: clamp(6px, 1.6cqh, 12px);
+  }
+
+  .privacy-note {
+    font-size: clamp(9px, 2.4cqh, 16px);
+    margin-top: clamp(10px, 2.4cqh, 18px);
+  }
+
+  .settings-actions {
+    margin-top: auto;
+    padding-top: clamp(16px, 5cqh, 32px);
+    gap: clamp(10px, 2.6cqh, 20px);
+  }
+
+  .settings-actions .btn {
+    min-height: clamp(38px, 9.5cqh, 72px);
+    padding: 0 clamp(14px, 4.4cqh, 36px);
+    font-size: clamp(10px, 2.8cqh, 18px);
+  }
+}
+
 @media (max-width: 680px) {
+  .settings-split {
+    flex-direction: column;
+  }
+
+  .settings-form,
+  .settings-tip {
+    width: 100%;
+  }
+
+  .settings-tip {
+    min-height: 320px;
+  }
+
   .platform-grid {
     grid-template-columns: repeat(2, 1fr);
   }
