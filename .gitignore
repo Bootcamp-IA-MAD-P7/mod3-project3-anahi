@@ -4,6 +4,10 @@
 .env.*
 !.env.example
 
+# Frontend env
+frontend/.env.local
+!frontend/.env.local.example
+
 # Tools
 __pycache__/
 .pytest_cache/
