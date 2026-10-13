@@ -13,7 +13,6 @@ export default function ResultCard({
     <section className="result" id="result">
       <div className="result-head">
         <div>
-          <p className="eyebrow">Your draft</p>
           <h2 className="result-title">Ready to share</h2>
         </div>
         <button className="btn-text" type="button" onClick={onClose}>
@@ -27,7 +26,6 @@ export default function ResultCard({
               {icon}
             </span>
             <span id="result-platform">{platformName}</span>
-            <span className="strip-label">Draft</span>
           </div>
           <button
             className="icon-btn"

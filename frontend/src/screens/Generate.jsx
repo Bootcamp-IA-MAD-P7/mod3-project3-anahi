@@ -3,6 +3,7 @@ import { signOut } from '../auth'
 import { getModels, streamGenerate } from '../api'
 import PlatformGrid from '../components/PlatformGrid'
 import ToneSelector from '../components/ToneSelector'
+import Dropdown from '../components/Dropdown'
 import ResultCard from '../components/ResultCard'
 import ProgressOverlay from '../components/ProgressOverlay'
 import Toast from '../components/Toast'
@@ -11,6 +12,12 @@ const DEFAULT_MODEL = 'openai/gpt-oss-120b'
 const DEFAULT_OPENROUTER_MODEL = 'nvidia/nemotron-3.5-lightning:free'
 const LONGFORM_PLATFORMS = ['medium', 'substack']
 const CITATIONS_PLATFORMS = ['medium', 'substack']
+const LANGUAGE_OPTIONS = [
+  { value: 'English', label: 'English' },
+  { value: 'Spanish', label: 'Spanish' },
+  { value: 'French', label: 'French' },
+  { value: 'Italian', label: 'Italian' },
+]
 const PLATFORM_URLS = {
   linkedin: 'https://www.linkedin.com',
   instagram: 'https://www.instagram.com',
@@ -303,17 +310,12 @@ export default function Generate({ userContext, onSettings }) {
               <label className="field-label" htmlFor="language">
                 Language
               </label>
-              <select
-                className="select"
+              <Dropdown
                 id="language"
                 value={language}
-                onChange={(event) => setLanguage(event.target.value)}
-              >
-                <option value="English">English</option>
-                <option value="Spanish">Spanish</option>
-                <option value="French">French</option>
-                <option value="Italian">Italian</option>
-              </select>
+                groups={[{ options: LANGUAGE_OPTIONS }]}
+                onSelect={setLanguage}
+              />
             </div>
           </div>
 
@@ -321,27 +323,27 @@ export default function Generate({ userContext, onSettings }) {
             <label className="field-label" htmlFor="model">
               Model
             </label>
-            <select
-              className="select"
+            <Dropdown
               id="model"
               value={model}
-              onChange={(event) => setModel(event.target.value)}
-            >
-              <optgroup label="Groq">
-                {modelCatalog.groq.map((id) => (
-                  <option key={id} value={id}>
-                    {id}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="OpenRouter">
-                {modelCatalog.openrouter.map((id) => (
-                  <option key={id} value={id}>
-                    {id}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
+              groups={[
+                {
+                  label: 'Groq',
+                  options: modelCatalog.groq.map((id) => ({
+                    value: id,
+                    label: id,
+                  })),
+                },
+                {
+                  label: 'OpenRouter',
+                  options: modelCatalog.openrouter.map((id) => ({
+                    value: id,
+                    label: id,
+                  })),
+                },
+              ]}
+              onSelect={setModel}
+            />
           </div>
 
           <div className="field">
