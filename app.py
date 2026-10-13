@@ -29,6 +29,7 @@ def get_user_id(token: str) -> str:
     try:
         jwks_client = jwt.PyJWKClient(os.environ["NEON_AUTH_JWKS_URL"])
         signing_key = jwks_client.get_signing_key_from_jwt(token)
+        print(f"Signing key alg: {signing_key.algorithm_name}", flush=True)
         payload = jwt.decode(
             token,
             signing_key.key,
@@ -36,7 +37,8 @@ def get_user_id(token: str) -> str:
             options={"verify_aud": False},
         )
         return payload["sub"]
-    except Exception:
+    except Exception as e:
+        print(f"JWT error: {type(e).__name__}: {e}", flush=True)
         raise HTTPException(
             status_code=401,
             detail="Session expired — please sign in again",
