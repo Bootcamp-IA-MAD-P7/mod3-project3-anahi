@@ -775,6 +775,10 @@ body.is-generating .page-tail {
   margin-bottom: 11px;
 }
 
+.result-head > div {
+  flex: 1;
+}
+
 .result-title {
   margin: 6px 0 0;
   font-family: var(--font-serif);
@@ -782,6 +786,7 @@ body.is-generating .page-tail {
   font-weight: 600;
   letter-spacing: -0.6px;
   color: var(--dark);
+  text-align: center;
 }
 
 .result-card {
