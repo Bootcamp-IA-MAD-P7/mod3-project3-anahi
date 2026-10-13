@@ -8,6 +8,7 @@ import ProgressOverlay from '../components/ProgressOverlay'
 import Toast from '../components/Toast'
 
 const DEFAULT_MODEL = 'openai/gpt-oss-120b'
+const DEFAULT_OPENROUTER_MODEL = 'nvidia/nemotron-3.5-lightning:free'
 const LONGFORM_PLATFORMS = ['medium', 'substack']
 const CITATIONS_PLATFORMS = ['medium', 'substack']
 const PLATFORM_URLS = {
@@ -81,7 +82,7 @@ export default function Generate({ userContext, onSettings }) {
   const [model, setModel] = useState(DEFAULT_MODEL)
   const [modelCatalog, setModelCatalog] = useState({
     groq: [DEFAULT_MODEL],
-    openrouter: [],
+    openrouter: [DEFAULT_OPENROUTER_MODEL],
   })
   const topicRef = useRef(null)
   const nextLineId = useRef(0)
