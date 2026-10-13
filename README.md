@@ -48,6 +48,44 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
 | `DATABASE_URL` | For RAG | Neon Postgres connection string used to store and retrieve embedded chunks |
 | `NEON_AUTH_JWKS_URL` | Yes | Neon Auth JWKS endpoint for JWT verification — found in Neon dashboard → Auth |
 
+## Deployment
+
+Deployed on Render as a Docker web service using the Dockerfile at repo root.
+
+> **Deploy checklist — do these before the first deploy or it will break:**
+> 1. Set `ALLOWED_ORIGIN` to your Render URL before deploying — defaults to
+>    `localhost:5173` which blocks all prod requests.
+> 2. `VITE_*` variables must be available to the **Docker build**, not just
+>    runtime. In Render: service settings → Environment → enable
+>    "Available to build environment" for `VITE_NEON_AUTH_URL` and
+>    `VITE_API_BASE_URL`. Without this the frontend bundle is built with
+>    empty strings and API calls go nowhere.
+
+**Render environment variables required:**
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `GROQ_API_KEY` | Yes | Groq LLM provider |
+| `OPENROUTER_API_KEY` | Yes | OpenRouter fallback provider |
+| `CLOUDFLARE_API_TOKEN` | For images | Cloudflare Workers AI |
+| `CLOUDFLARE_ACCOUNT_ID` | For images | Cloudflare account |
+| `DATABASE_URL` | For RAG | Neon direct connection string (no `-pooler`) |
+| `NEON_AUTH_JWKS_URL` | Yes | Neon Auth JWKS endpoint |
+| `ALLOWED_ORIGIN` | Yes | Your Render service URL, e.g. `https://saymore.onrender.com` |
+| `VITE_NEON_AUTH_URL` | Yes | Neon Auth URL — baked into the frontend bundle at build time |
+| `VITE_API_BASE_URL` | Yes | API base URL — baked into the frontend bundle at build time |
+
+`VITE_*` variables are Vite build-time values. They must be set as Render
+environment variables before the Docker image builds — they are inlined into
+the JS bundle during `npm run build` and are not available at runtime.
+
+**Cold start warning:** the embedding model (~120MB) is downloaded at container
+startup if not cached. The first request after a cold deploy will be slow.
+This is expected behaviour — subsequent starts load from cache.
+
+SPA client-side routing is handled by the catch-all route in `app.py` —
+no separate redirect rules needed on Render.
+
 ## Architecture
 
 The pipeline is orchestrated with LangGraph (`src/graph/`):

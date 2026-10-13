@@ -5,6 +5,8 @@ import os
 import jwt
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
@@ -66,9 +68,11 @@ class UserContextRequest(BaseModel):
 
 app = FastAPI()
 
+origins = [os.environ.get("ALLOWED_ORIGIN", "http://localhost:5173")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -227,3 +231,14 @@ async def generate(
             }
 
     return EventSourceResponse(event_stream())
+
+
+if os.path.exists("frontend/dist"):
+    app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = os.path.join("frontend/dist", full_path)
+        if full_path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse("frontend/dist/index.html")
