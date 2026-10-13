@@ -149,6 +149,7 @@ Full breakdown, markers and latest results in [docs/tests.md](docs/tests.md).
 
 - **Forgot password**: UI stub only. Implement once Neon Auth SDK password reset flow
   is confirmed (`resetPassword(email)` + `/reset-password` token route on the frontend).
+- **Neon Auth SDK**: pinned at `0.8.0-beta`. Works for MVP. Check for a stable version and upgrade.
 
 ## Contributing
 
