@@ -18,6 +18,13 @@ export async function getMe() {
   return res.json()
 }
 
+export async function getModels() {
+  const headers = await authHeaders()
+  const res = await fetch(`${BASE}/models`, { headers })
+  if (!res.ok) throw new Error('Failed to load models')
+  return res.json()
+}
+
 export async function saveContext(userContext, isNew = false) {
   const headers = await authHeaders()
   const method = isNew ? 'POST' : 'PUT'

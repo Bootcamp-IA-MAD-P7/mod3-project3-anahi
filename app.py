@@ -12,6 +12,8 @@ from sse_starlette.sse import EventSourceResponse
 
 from src.graph.builder import graph
 from src.graph.enums import Language, Platform, Provider, Tone
+from src.llm.groq import AVAILABLE_MODELS as GROQ_MODELS
+from src.llm.open_router import AVAILABLE_MODELS as OPENROUTER_MODELS
 from src.rag.store import get_user_context, upsert_user_context
 
 
@@ -84,6 +86,11 @@ app.add_middleware(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/models")
+def models():
+    return {"groq": GROQ_MODELS, "openrouter": OPENROUTER_MODELS}
 
 
 @app.get("/me")

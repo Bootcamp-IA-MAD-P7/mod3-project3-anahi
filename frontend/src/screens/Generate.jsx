@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { signOut } from '../auth'
-import { streamGenerate } from '../api'
+import { getModels, streamGenerate } from '../api'
 import PlatformGrid from '../components/PlatformGrid'
 import ToneSelector from '../components/ToneSelector'
 import ResultCard from '../components/ResultCard'
 import ProgressOverlay from '../components/ProgressOverlay'
 import Toast from '../components/Toast'
 
-const MODEL = 'openai/gpt-oss-120b'
-const PROVIDER = 'groq'
+const DEFAULT_MODEL = 'openai/gpt-oss-120b'
 const LONGFORM_PLATFORMS = ['medium', 'substack']
 const CITATIONS_PLATFORMS = ['medium', 'substack']
 const PLATFORM_URLS = {
@@ -79,6 +78,11 @@ export default function Generate({ userContext, onSettings }) {
   const [overlayVisible, setOverlayVisible] = useState(false)
   const [result, setResult] = useState(null)
   const [toast, setToast] = useState({ id: 0, msg: '' })
+  const [model, setModel] = useState(DEFAULT_MODEL)
+  const [modelCatalog, setModelCatalog] = useState({
+    groq: [DEFAULT_MODEL],
+    openrouter: [],
+  })
   const topicRef = useRef(null)
   const nextLineId = useRef(0)
 
@@ -93,6 +97,22 @@ export default function Generate({ userContext, onSettings }) {
 
   const showToast = (msg) => setToast((t) => ({ id: t.id + 1, msg }))
   const citationsAllowed = CITATIONS_PLATFORMS.includes(platform)
+  const provider = modelCatalog.openrouter.includes(model)
+    ? 'openrouter'
+    : 'groq'
+
+  useEffect(() => {
+    getModels()
+      .then((catalog) => {
+        setModelCatalog(catalog)
+        setModel((current) => {
+          const known = [...catalog.groq, ...catalog.openrouter]
+          if (known.includes(current)) return current
+          return catalog.groq[0] || catalog.openrouter[0] || current
+        })
+      })
+      .catch(() => showToast('Could not load the model list'))
+  }, [])
 
   function handlePlatform(id) {
     setPlatform(id)
@@ -138,8 +158,8 @@ export default function Generate({ userContext, onSettings }) {
       tone: tone.toLowerCase(),
       audience: audience.trim(),
       language,
-      model: MODEL,
-      provider: PROVIDER,
+      model,
+      provider,
       image_enabled: image,
       citations_enabled:
         citations && CITATIONS_PLATFORMS.includes(platform.toLowerCase()),
@@ -294,6 +314,33 @@ export default function Generate({ userContext, onSettings }) {
                 <option value="Italian">Italian</option>
               </select>
             </div>
+          </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor="model">
+              Model
+            </label>
+            <select
+              className="select"
+              id="model"
+              value={model}
+              onChange={(event) => setModel(event.target.value)}
+            >
+              <optgroup label="Groq">
+                {modelCatalog.groq.map((id) => (
+                  <option key={id} value={id}>
+                    {id}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="OpenRouter">
+                {modelCatalog.openrouter.map((id) => (
+                  <option key={id} value={id}>
+                    {id}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
           </div>
 
           <div className="field">
