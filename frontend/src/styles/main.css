@@ -48,6 +48,7 @@
   --login-text: #53473f;
   --login-placeholder: #ac9990;
   --login-forgot: #795f54;
+  --login-error: #730101;
   --login-new: #725b51;
   --login-tagline: #4a3830;
   --tip-olive: #0b1a1d;
@@ -1181,6 +1182,20 @@ body.is-generating .page-tail {
 
 .login-forgot:hover {
   color: var(--login-btn);
+}
+
+.field-error {
+  display: block;
+  margin-top: 5px;
+  font-size: 9px;
+  font-family: var(--font-sans);
+  color: var(--login-error);
+}
+
+.login-input.auth-input-wrap--error,
+.login-input.auth-input-wrap--error:focus {
+  border-color: var(--login-error);
+  box-shadow: none;
 }
 
 .btn-login {

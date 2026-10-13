@@ -7,6 +7,7 @@ export default function Login({ onSuccess }) {
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' })
   const [toast, setToast] = useState({ id: 0, msg: '' })
 
   useEffect(() => {
@@ -23,7 +24,19 @@ export default function Login({ onSuccess }) {
       const me = await getMe().catch(() => null)
       onSuccess(me?.user_context || '')
     } catch (err) {
-      showToast(err.message || 'Could not sign you in')
+      const message = err.message || 'Could not sign you in'
+      const lower = message.toLowerCase()
+      if (lower.includes('password') || lower === 'invalid credentials') {
+        setFieldErrors({ email: '', password: message })
+      } else if (
+        lower.includes('not found') ||
+        lower.includes('no user') ||
+        lower.includes('email')
+      ) {
+        setFieldErrors({ email: message, password: '' })
+      } else {
+        setFieldErrors({ email: message, password: message })
+      }
     }
   }
 
@@ -62,7 +75,11 @@ export default function Login({ onSuccess }) {
                   Email address
                 </label>
                 <input
-                  className="login-input"
+                  className={
+                    fieldErrors.email
+                      ? 'login-input auth-input-wrap--error'
+                      : 'login-input'
+                  }
                   type="email"
                   id="email"
                   name="email"
@@ -70,8 +87,16 @@ export default function Login({ onSuccess }) {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => {
+                    setEmail(event.target.value)
+                    setFieldErrors((prev) => ({ ...prev, email: '' }))
+                  }}
                 />
+                {fieldErrors.email && (
+                  <span className="field-error" role="alert">
+                    {fieldErrors.email}
+                  </span>
+                )}
               </div>
               <div className="login-pw-row">
                 <label className="login-label" htmlFor="password">
@@ -85,17 +110,31 @@ export default function Login({ onSuccess }) {
                   Forgot password?
                 </button>
               </div>
-              <input
-                className="login-input"
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Your password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
+              <div>
+                <input
+                  className={
+                    fieldErrors.password
+                      ? 'login-input auth-input-wrap--error'
+                      : 'login-input'
+                  }
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="Your password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value)
+                    setFieldErrors((prev) => ({ ...prev, password: '' }))
+                  }}
+                />
+                {fieldErrors.password && (
+                  <span className="field-error" role="alert">
+                    {fieldErrors.password}
+                  </span>
+                )}
+              </div>
               <button className="btn-login" type="submit">
                 {mode === 'login' ? 'Sign in' : 'Create account'}
               </button>
