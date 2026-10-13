@@ -47,70 +47,117 @@ export default function Onboarding({ onSave }) {
   }
 
   return (
-    <>
-      <main className="content">
-        <section className="onboard-card">
-          <button
-            className="icon-btn onboard-close"
-            type="button"
-            aria-label="Close"
-            onClick={handleSkip}
+    <div className="page-onboarding">
+      <main className="content content-tall">
+        <header className="page-head">
+          <p className="eyebrow">
+            Welcome to <span className="eyebrow-brand">SayLess</span>
+          </p>
+          <h1 className="page-title">Onboarding</h1>
+          <p className="page-sub">
+            Tell us about you so every draft starts in your voice
+          </p>
+        </header>
+
+        <div className="onboard-stage">
+          <a
+            className="corner-logo onboard-brand"
+            href="#"
+            onClick={(event) => {
+              event.preventDefault()
+              handleSkip()
+            }}
           >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
-          <div className="onboard-col">
-            <h1 className="onboard-title">Shape your <em>voice</em></h1>
-            <p className="onboard-intro">
-              Share the context you want every draft to carry: what you do, who
-              you write for, and how you like to sound
-            </p>
-            <label className="field-label" htmlFor="context">
-              Your context
-            </label>
-            <textarea
-              className="textarea onboard-input"
-              id="context"
-              placeholder="I write about design systems for early stage teams, in a warm and direct voice"
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-            />
-            <button
-              className="btn btn-primary onboard-cta"
-              type="button"
-              onClick={handleContinue}
-            >
-              Continue
-            </button>
-            <p className="onboard-note">
-              You can update this anytime in settings
-            </p>
-          </div>
-        </section>
+            <img className="brand-logo" src="/sayless-logo.png" alt="SayLess" />
+          </a>
+          <section className="settings-split">
+            <div className="settings-form">
+              <div className="settings-form-head">
+                <h2 className="ws-title">Publishing context</h2>
+              </div>
+              <p className="settings-lead">
+                Give SayLess the background behind your words. This context is
+                used as a starting point for every post.
+              </p>
+              <label className="field-label" htmlFor="onboarding-context">
+                About you or your company
+              </label>
+              <textarea
+                className="textarea textarea-settings"
+                id="onboarding-context"
+                placeholder="Share what you do, who you write for, and how you like to sound"
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+              />
+              <p className="hint">
+                Include what you do, what you believe, and how you like to sound.
+              </p>
+              <p className="privacy-note">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="5" y="11" width="14" height="10" rx="2" />
+                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                </svg>
+                <span>
+                  Only used to personalise your drafts. It won't appear as public
+                  content.
+                </span>
+              </p>
+              <div className="settings-actions">
+                <button className="btn btn-clay" type="button" onClick={handleContinue}>
+                  Continue
+                </button>
+                <button className="btn btn-secondary" type="button" onClick={handleSkip}>
+                  Skip for now
+                </button>
+              </div>
+            </div>
+            <aside className="settings-tip">
+              <img className="tip-photo" src="/login-hero.jpg" alt="" />
+              <div className="tip-content">
+                <h2 className="tip-title">
+                  The roots of a
+                  <br />
+                  great post.
+                </h2>
+                <p className="tip-desc">
+                  A few useful details to give your writing a
+                  <br />
+                  natural starting point:
+                </p>
+              </div>
+              <div className="tip-items">
+                <div className="tip-item">
+                  <p className="tip-label">Who you are</p>
+                  <p className="tip-text">Your role, company, or creative practice.</p>
+                </div>
+                <div className="tip-item">
+                  <p className="tip-label">What you care about</p>
+                  <p className="tip-text">
+                    The ideas and values you want to share.
+                  </p>
+                </div>
+                <div className="tip-item">
+                  <p className="tip-label">How you sound</p>
+                  <p className="tip-text">
+                    Your personality, style, and point of view.
+                  </p>
+                </div>
+              </div>
+            </aside>
+          </section>
+        </div>
       </main>
 
-      <div className="page-tail">
-        <a
-          className="corner-logo"
-          href="#"
-          onClick={(event) => {
-            event.preventDefault()
-            handleSkip()
-          }}
-        >
-          <img className="brand-logo" src="/sayless-logo.png" alt="SayLess" />
-        </a>
-      </div>
       {toast.msg && <Toast key={toast.id} message={toast.msg} />}
-    </>
+    </div>
   )
 }
