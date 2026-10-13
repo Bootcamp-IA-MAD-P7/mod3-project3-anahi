@@ -132,6 +132,26 @@ secrets and the daily model checks are documented in
 [docs/llm-setup.md](docs/llm-setup.md), the image pipeline in
 [docs/image-generation.md](docs/image-generation.md).
 
+### Rate limits
+
+Per-user guards applied to every generation. Only the first attempt of a
+fallback cascade is charged against the budget — retries pass
+`bypass_limits=True` so one cascade never spends it twice.
+
+| Limit | Value | Where |
+| --- | --- | --- |
+| LLM requests per minute | 5 | `src/llm/security.py` |
+| LLM requests per day | 200 | `src/llm/security.py` |
+| LLM tokens per call | 4000 | `src/llm/security.py` |
+| LLM tokens per day | 50000 | `src/llm/security.py` |
+| Images per user per minute | 2 | `src/chains/image_security.py` |
+| Images per user per day | 5 | `src/chains/image_security.py` |
+| Images per account per day | 100 | `src/chains/image_security.py` |
+
+When a user's budget is exhausted every attempt in the cascade is rejected, so
+the UI shows "Content generation failed — all models are currently
+unavailable. Please try again shortly".
+
 ### Frontend
 
 React 19 + Vite, with `@neondatabase/neon-js` for Neon Auth.

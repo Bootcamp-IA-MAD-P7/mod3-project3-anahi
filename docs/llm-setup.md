@@ -77,8 +77,8 @@ user's budget twice.
 | --- | --- | --- |
 | Requests per minute | `MAX_REQUESTS_PER_MINUTE` | 5 |
 | Requests per day | `MAX_REQUESTS_PER_DAY` | 200 |
-| Tokens per call | `MAX_TOKENS_PER_CALL` | 2000 |
-| Tokens per day | `MAX_TOKENS_PER_DAY` | 20000 |
+| Tokens per call | `MAX_TOKENS_PER_CALL` | 4000 |
+| Tokens per day | `MAX_TOKENS_PER_DAY` | 50000 |
 
 `check_rate_limit` runs before a request is sent, `check_token_limit` before the
 token spend is accepted, and `register_request` records the tokens used afterwards.
