@@ -99,7 +99,7 @@ secrets and the daily model checks are documented in
 
 ### Frontend
 
-React 18 + Vite, with `@neondatabase/neon-js` for Neon Auth.
+React 19 + Vite, with `@neondatabase/neon-js` for Neon Auth.
 
 Run: `cd frontend && npm install && npm run dev`
 
