@@ -35,4 +35,5 @@ Neon (serverless Postgres) with pgvector. No pooling — use the direct connecti
 
 - ivfflat index on `rag_chunks.embedding` needs ~few hundred rows to be effective; sequential scan is used on small data (fine for PoC)
 - `user_context` is free text — company name, tone, brand voice, audience; injected into every generation prompt
-- Add `.env` to `.gitignore` immediately and after config.py
+- `.env` is gitignored (only `.env.example` is committed) — when you add a key,
+  wire it through `src/config.py` and document it in the README env table

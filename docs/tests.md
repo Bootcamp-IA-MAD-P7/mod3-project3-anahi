@@ -4,15 +4,15 @@ pytest suite — offline by default, external services gated behind markers.
 
 ## Layout
 
-137 tests total: 106 unit, 31 integration.
+142 tests total: 111 unit, 31 integration.
 
-### Unit (`tests/unit/`, 106 tests)
+### Unit (`tests/unit/`, 111 tests)
 
 All mocked, no network, no API keys.
 
 | File | Tests | Covers |
 |---|---|---|
-| `test_prompts.py` | 44 | Prompt builders: shape, topic/audience/tone/language, user context, tone instruction, RAG block, citations block, image block, dispatch |
+| `test_prompts.py` | 49 | Prompt builders: shape, topic/audience/tone/language, user context, tone instruction, RAG block, citations block, image block, dispatch |
 | `test_edges.py` | 10 | Graph routing: `_route_after_router` (platform → RAG node), `_route_after_llm`, `_route_after_platform` |
 | `test_router_node.py` | 8 | `router_node`: citations and image flag normalization |
 | `test_image_security.py` | 8 | Image rate limits (per minute, per user, per account) |
@@ -88,7 +88,7 @@ Defined in [pyproject.toml](../pyproject.toml):
 
 ```bash
 uv run pytest                             # default: everything, live tests skipped
-uv run pytest -m "not integration"        # CI path: unit only
+uv run pytest -m "not integration"        # unit only, offline
 uv run pytest -m integration              # RAG network tests + Neon DB tests
 uv run pytest tests/unit/test_backend.py  # backend API tests, all mocked
 uv run pytest tests/integration -m live   # live tests (needs RUN_LIVE_LLM_TESTS=1 + keys)
@@ -102,18 +102,18 @@ otherwise they skip and the default run is network-free.
 
 ## Results
 
-Last run, 2026-10-10 (no `DATABASE_URL`, no `NEON_AUTH_TEST_TOKEN`):
+Last run, 2026-10-14 (no `DATABASE_URL`, no `NEON_AUTH_TEST_TOKEN`):
 
 | Command | Result |
 |---|---|
-| `uv run pytest -q -m "not integration"` | **106 passed, 19 skipped, 13 deselected** in 39.1s |
-| `uv run pytest -q -m integration` | **2 passed, 11 skipped, 125 deselected** in 43.0s |
-| `uv run pytest tests/unit/test_backend.py -v` | **10 passed** in 37.7s |
+| `uv run pytest -q -m "not integration"` | **111 passed, 18 skipped, 13 deselected** in 13.9s |
+| `uv run pytest -q -m integration` | **2 passed, 11 skipped, 129 deselected** in 15.4s |
+| `uv run pytest tests/unit/test_backend.py -q` | **10 passed** in 11.4s |
 
 ### What the skips and deselections mean
 
-- **19 skipped** — the `live` tests (`test_groq.py`, `test_openrouter.py`,
-  `test_image_generation.py`): 3 + 11 + 5. They carry
+- **18 skipped** — the `live` tests (`test_groq.py`, `test_openrouter.py`,
+  `test_image_generation.py`): 3 + 10 + 5. They carry
   `skipif(RUN_LIVE_LLM_TESTS != "1")`, so without that env var every run skips
   them. They are not broken, they are waiting for an opt-in.
 - **+11 skipped** — `test_db_integration.py` (10, needs `DATABASE_URL`) and
@@ -121,8 +121,13 @@ Last run, 2026-10-10 (no `DATABASE_URL`, no `NEON_AUTH_TEST_TOKEN`):
   pattern, different gates.
 - **13 deselected** — the 13 `integration` tests (2 RAG + 10 DB + 1 backend).
   `-m "not integration"` is a *filter expression*, not a failure: pytest counts
-  filtered-out tests as "deselected". The CI path excludes them on purpose so
-  the default PR check needs no network and no database.
+  filtered-out tests as "deselected". The offline path excludes them on purpose
+  so a local run before a PR needs no network and no database.
+
+CI today runs only the frontend lint and build
+([frontend.yml](../.github/workflows/frontend.yml)) plus the two daily live
+model checks — no workflow runs pytest yet, so treat the unit command above as
+the PR gate you run yourself.
 
 ### Real integration test results
 
@@ -176,16 +181,18 @@ Failures:
   gets 403. These 2 ids are back in `BLOCKED_MODELS`.
 - **2 transient — 429** `google/gemma-4-26b-a4b-it:free` and
   `google/gemma-4-31b-it:free`: `upstream_provider_shared_pool` rate limits
-  from Google AI Studio. Not blocked — 429 is provider capacity, not a broken
-  model, and the daily workflow retries once before opening an issue.
+  from Google AI Studio. Both are in `BLOCKED_MODELS` now — 429 is provider
+  capacity, not a broken model, but they rate limit on some days and pass on
+  others, so blocking them keeps the daily check green. The workflow still
+  retries once before opening an issue.
 
 Also confirmed in this run:
 
 - `DEFAULT_MODEL` (`nvidia/nemotron-3.5-lightning:free`) is present in the free
   catalog and generated successfully.
-- `poolside/laguna-s-2.1:free` and
-  `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` passed — both were in
-  the old blocked list and are now unblocked.
+- `poolside/laguna-s-2.1:free` passed and stayed unblocked.
+  `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free` passed this run but is
+  blocked again — same intermittent 429 behaviour as the gemma models.
 - Embedding models are excluded by `get_available_models()`; all 15 catalog
   entries tested are chat models.
 

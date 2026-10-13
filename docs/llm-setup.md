@@ -33,6 +33,20 @@ keeps every id containing `:free`, falling back to `DEFAULT_MODEL`
 
 Browse the free catalog at https://openrouter.ai/models?q=:free
 
+### Model selection
+
+The Generate form has a Model dropdown, grouped by provider. It is populated
+from `GET /models` (no auth required), which returns both lists from their
+single source of truth:
+
+```json
+{"groq": ["openai/gpt-oss-120b", ...], "openrouter": ["nvidia/nemotron-3.5-lightning:free", ...]}
+```
+
+The selected id is sent with the request as `model`, and `provider` is derived
+from which list contains it, so the fallback cascade starts on the right client.
+If the fetch fails the form keeps the Groq default and shows a toast.
+
 ### Fallback chain
 
 `run_with_fallback(selected_model, prompt, user_id, provider)` in
@@ -46,8 +60,10 @@ order:
 - `provider="openrouter"`: the OpenRouter free models rotated so the selected one
   leads (`DEFAULT_MODEL` first when no model is selected), then all Groq models
 
-Any other value falls back to the Groq order. When both lists are exhausted the
-generator yields "All models unavailable, please try again later".
+Any other value falls back to the Groq order. After both lists are exhausted the
+chain makes one last attempt with `FALLBACK_MODEL` (`openrouter/free`, the
+provider's free-model alias) before yielding "All models unavailable, please try
+again later".
 
 Only the first attempt is checked against the rate and token limits. Every retry
 after a failure passes `bypass_limits=True` so one cascade does not consume the

@@ -94,7 +94,7 @@ the same 384-dimensional vector space.
 
 #### Migration sanity check
 
-Before swapping the stack, `scripts/check_embedding_compat.py` embedded the
+Before swapping the stack, a throwaway script embedded the
 same sentences through the old (sentence-transformers fp32) and new (fastembed
 int8 ONNX) pipelines and compared vectors:
 

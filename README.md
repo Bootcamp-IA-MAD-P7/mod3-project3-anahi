@@ -34,8 +34,8 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
 
   > **Cold start warning:** the embedding model
   > (`paraphrase-multilingual-MiniLM-L12-v2`, int8 ONNX) is downloaded on first
-  > boot (~120MB). Subsequent cold starts load from cache (~1–2s). HF Spaces
-  > caches it after the first run so subsequent cold starts are faster.
+  > local boot (~120MB). Subsequent boots load from cache (~1–2s). In deploys it
+  > is baked into the Docker image at build time instead — see Deployment below.
 
 ## Environment Variables
 
@@ -50,18 +50,19 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
 
 ## Deployment
 
-Deployed on Render as a Docker web service using the Dockerfile at repo root.
+Deployed on Google Cloud (Cloud Run) as a single service — the Docker image
+builds the frontend in a Node stage and FastAPI serves the built SPA plus the
+API, so front and back ship together with no separate static hosting.
 
 > **Deploy checklist — do these before the first deploy or it will break:**
-> 1. Set `ALLOWED_ORIGIN` to your Render URL before deploying — defaults to
->    `localhost:5173` which blocks all prod requests.
-> 2. `VITE_*` variables must be available to the **Docker build**, not just
->    runtime. In Render: service settings → Environment → enable
->    "Available to build environment" for `VITE_NEON_AUTH_URL` and
->    `VITE_API_BASE_URL`. Without this the frontend bundle is built with
->    empty strings and API calls go nowhere.
+> 1. Set `ALLOWED_ORIGIN` to your Cloud Run service URL before deploying —
+>    it defaults to `localhost:5173` which blocks all prod requests.
+> 2. `VITE_*` variables must be available to the **Docker build**, not just at
+>    runtime (Cloud Run: `--set-build-env-vars` on `gcloud run deploy`).
+>    Without this the frontend bundle is built with empty strings and API
+>    calls go nowhere.
 
-**Render environment variables required:**
+**Cloud Run environment variables required:**
 
 | Variable | Required | Description |
 | --- | --- | --- |
@@ -71,20 +72,23 @@ Deployed on Render as a Docker web service using the Dockerfile at repo root.
 | `CLOUDFLARE_ACCOUNT_ID` | For images | Cloudflare account |
 | `DATABASE_URL` | For RAG | Neon direct connection string (no `-pooler`) |
 | `NEON_AUTH_JWKS_URL` | Yes | Neon Auth JWKS endpoint |
-| `ALLOWED_ORIGIN` | Yes | Your Render service URL, e.g. `https://saymore.onrender.com` |
+| `ALLOWED_ORIGIN` | Yes | Your Cloud Run service URL, e.g. `https://sayless-xxxx.a.run.app` |
 | `VITE_NEON_AUTH_URL` | Yes | Neon Auth URL — baked into the frontend bundle at build time |
-| `VITE_API_BASE_URL` | Yes | API base URL — leave **empty** on Render (same-origin requests); use `/api` locally so the Vite proxy forwards to `:8000` |
+| `VITE_API_BASE_URL` | Yes | API base URL — leave **empty** in prod (same-origin requests); use `/api` locally so the Vite proxy forwards to `:8000` |
 
-`VITE_*` variables are Vite build-time values. They must be set as Render
-environment variables before the Docker image builds — they are inlined into
-the JS bundle during `npm run build` and are not available at runtime.
+`VITE_*` variables are Vite build-time values. They must be passed as build
+environment variables before the image builds — they are inlined into the JS
+bundle during `npm run build` and are not available at runtime.
+
+**Ports:** Cloud Run injects `$PORT`; the image listens on it
+(`uvicorn ... --port ${PORT:-8000}`, `EXPOSE 8080`).
 
 **Cold start:** the embedding model (~120MB) is baked into the Docker image at
 build time (`FASTEMBED_CACHE_PATH=/app/.cache/fastembed`), so cold starts only
 load it from the image cache — no download at runtime.
 
 SPA client-side routing is handled by the catch-all route in `app.py` —
-no separate redirect rules needed on Render.
+no separate redirect rules needed on Cloud Run.
 
 ## Architecture
 
@@ -109,7 +113,10 @@ The pipeline is orchestrated with LangGraph (`src/graph/`):
 - **LLM clients** (`src/llm/`): Groq is the primary provider and OpenRouter the
   secondary one; `src/llm/fallback.py` cascades from the selected model of either
   provider into the other provider's models, yielding a status update per attempt.
-  Per-user request and token limits live in `src/llm/security.py`.
+  The model itself is picked in the Generate form: the dropdown is populated from
+  `GET /models` (Groq's `AVAILABLE_MODELS` plus the OpenRouter free catalog) and
+  the choice travels with the request as `model` + `provider`. Per-user request
+  and token limits live in `src/llm/security.py`.
 - **Embeddings** (`src/rag/`): **fastembed** — lightweight ONNX-based
   embedding (int8 quantized, no torch dependency), same multilingual MiniLM
   model as before. Details in [docs/rag.md](docs/rag.md).
@@ -152,7 +159,7 @@ Full breakdown, markers and latest results in [docs/tests.md](docs/tests.md).
   pytest
   ```
 
-- **Unit only** (what CI runs):
+- **Unit only** (offline, no network or keys needed):
 
   ```bash
   pytest -m "not integration"
