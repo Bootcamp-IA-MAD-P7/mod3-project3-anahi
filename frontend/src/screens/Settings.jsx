@@ -3,7 +3,7 @@ import { getToken, signOut } from '../auth'
 import { getMe, saveContext } from '../api'
 import Toast from '../components/Toast'
 
-export default function Settings({ onCancel, onSignOut }) {
+export default function Settings({ onCancel, onSignOut, onSave }) {
   const [value, setValue] = useState('')
   const [saved, setSaved] = useState('')
   const [toast, setToast] = useState({ id: 0, msg: '' })
@@ -32,6 +32,7 @@ export default function Settings({ onCancel, onSignOut }) {
       await saveContext(value.trim(), false)
       setSaved(value.trim())
       showToast('Changes saved')
+      onSave(value.trim())
     } catch {
       showToast('Cannot reach the server')
     }
