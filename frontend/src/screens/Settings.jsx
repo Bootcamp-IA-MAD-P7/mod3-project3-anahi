@@ -149,9 +149,6 @@ export default function Settings({ onCancel, onSignOut }) {
               <button className="btn btn-secondary" type="button" onClick={handleCancel}>
                 Cancel
               </button>
-              <button className="btn btn-secondary" type="button" onClick={handleSignOut}>
-                Sign out
-              </button>
             </div>
           </div>
           <aside className="settings-tip">

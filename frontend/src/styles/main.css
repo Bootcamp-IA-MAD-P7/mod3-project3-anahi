@@ -649,7 +649,6 @@ button {
   gap: 14px;
   margin-top: auto;
   padding: 14px 0;
-  border-top: 1px solid var(--border);
 }
 
 .workspace .ws-footer .btn {
