@@ -4,6 +4,14 @@
 .env.*
 !.env.example
 
+# Frontend env
+frontend/.env.local
+!frontend/.env.local.example
+
+# Frontend build/dependencies
+frontend/node_modules/
+frontend/dist/
+
 # Tools
 __pycache__/
 .pytest_cache/
