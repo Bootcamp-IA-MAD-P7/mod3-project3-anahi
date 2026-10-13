@@ -24,5 +24,5 @@ TextEmbedding('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"
 COPY src/ ./src/
 COPY app.py ./
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
-EXPOSE 8000
+EXPOSE 8080
 CMD ["sh", "-c", "uv run uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}"]
