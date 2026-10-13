@@ -1,6 +1,3 @@
-import os
-
-import jwt
 from markdownify import markdownify
 
 from src.chains.image_fallback import run_image_with_fallback
@@ -83,18 +80,6 @@ def router_node(state: ContentState) -> dict:
     }
 
 
-def get_user_id(token: str) -> str:
-    jwks_client = jwt.PyJWKClient(os.environ["NEON_AUTH_JWKS_URL"])
-    signing_key = jwks_client.get_signing_key_from_jwt(token)
-    payload = jwt.decode(
-        token,
-        signing_key.key,
-        algorithms=["RS256"],
-        options={"verify_aud": False},
-    )
-    return payload["sub"]
-
-
 def llm_node(state: ContentState) -> dict:
     messages = build_prompt(state)
     status_messages = list(state["status_messages"])
@@ -103,7 +88,7 @@ def llm_node(state: ContentState) -> dict:
     for update in run_with_fallback(
         selected_model=state["model"],
         prompt=messages,
-        user_id=get_user_id(state["token"]),
+        user_id=state["user_id"],
         provider=state["provider"],
     ):
         status_messages.append(update.status)
@@ -141,7 +126,7 @@ def translation_node(state: ContentState) -> dict:
     for update in run_with_fallback(
         selected_model=state["model"],
         prompt=messages,
-        user_id=get_user_id(state["token"]),
+        user_id=state["user_id"],
         provider=state["provider"],
     ):
         status_messages.append(update.status)
@@ -271,7 +256,7 @@ async def image_node(state: ContentState) -> dict:
     async for update in run_image_with_fallback(
         prompt=prompt,
         platform=platform,
-        user_id=get_user_id(state["token"]),
+        user_id=state["user_id"],
     ):
         status_messages.append(update.status)
         if update.result is not None:

@@ -141,6 +141,7 @@ async def generate(
 
     state = {
         "token": token,
+        "user_id": user_id,
         "topic": body.topic,
         "platform": body.platform,
         "tone": body.tone,
