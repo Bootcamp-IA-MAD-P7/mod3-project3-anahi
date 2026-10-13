@@ -49,30 +49,38 @@ export async function streamGenerate(payload, onStatus, onResult, onError) {
     const decoder = new TextDecoder()
     let buffer = ''
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const blocks = buffer.split('\n\n')
-      buffer = blocks.pop()
-      for (const block of blocks) {
-        let eventName = 'message'
-        for (const line of block.split('\n')) {
-          if (line.startsWith('event:')) {
-            eventName = line.slice(6).trim()
-            continue
-          }
-          if (line.startsWith('data:')) {
-            try {
-              const data = JSON.parse(line.slice(5).trim())
-              if (eventName === 'status') onStatus(data.message)
-              else if (eventName === 'result') onResult(data)
-              else if (eventName === 'error') onError(data.message)
-            } catch {}
+    function dispatchBlock(block) {
+      let eventName = 'message'
+      for (const line of block.split(/\r?\n/)) {
+        if (line.startsWith('event:')) {
+          eventName = line.slice(6).trim()
+          continue
+        }
+        if (line.startsWith('data:')) {
+          try {
+            const data = JSON.parse(line.slice(5).trim())
+            console.log('SSE event', eventName, data)
+            if (eventName === 'status') onStatus(data.message)
+            else if (eventName === 'result') onResult(data)
+            else if (eventName === 'error') onError(data.message)
+          } catch {
+            console.log('SSE parse failed', line)
           }
         }
       }
     }
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const blocks = buffer.split(/\r?\n\r?\n/)
+      buffer = blocks.pop()
+      for (const block of blocks) {
+        dispatchBlock(block)
+      }
+    }
+    if (buffer.trim()) dispatchBlock(buffer)
   } catch (err) {
     if (err.name === 'AbortError') {
       onError('Generation timed out — please try again')
