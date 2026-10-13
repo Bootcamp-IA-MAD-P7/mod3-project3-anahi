@@ -91,11 +91,20 @@ The pipeline is orchestrated with LangGraph (`src/graph/`):
   `run_image_with_fallback`, which tries Cloudflare models in turn until one
   returns an image. Rate limits live in `src/chains/image_security.py`.
 
-The frontend is planned as a Gradio UI. RAG is live with two pipelines (arXiv for
-Medium/Substack, BBC news for LinkedIn) — see [docs/rag.md](docs/rag.md) for how
-they work. Provider details, secrets and the daily model checks are documented in
+RAG is live with two pipelines (arXiv for Medium/Substack, BBC news for
+LinkedIn) — see [docs/rag.md](docs/rag.md) for how they work. Provider details,
+secrets and the daily model checks are documented in
 [docs/llm-setup.md](docs/llm-setup.md), the image pipeline in
 [docs/image-generation.md](docs/image-generation.md).
+
+### Frontend
+
+React 18 + Vite, with `@neondatabase/neon-js` for Neon Auth.
+
+Run: `cd frontend && npm install && npm run dev`
+
+Env: copy `frontend/.env.local.example` to `frontend/.env.local` and fill in
+`VITE_NEON_AUTH_URL` and `VITE_API_BASE_URL`
 
 ### Supported languages
 
