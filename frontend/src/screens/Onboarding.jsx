@@ -24,15 +24,22 @@ export default function Onboarding({ onSave }) {
 
   async function handleContinue() {
     const text = value.trim()
-    const token = await getToken().catch(() => null)
-    if (text && token) {
-      try {
-        await saveContext(text, true)
-      } catch {
-        showToast('Cannot reach the server')
-      }
+    if (!text) {
+      onSave(loaded)
+      return
     }
-    onSave(text || loaded)
+    const token = await getToken().catch(() => null)
+    if (!token) {
+      showToast('Cannot reach the server')
+      return
+    }
+    try {
+      await saveContext(text, true)
+    } catch {
+      showToast('Cannot reach the server')
+      return
+    }
+    onSave(text)
   }
 
   function handleSkip() {

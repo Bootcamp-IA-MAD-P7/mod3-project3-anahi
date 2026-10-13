@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getSession } from './auth'
 import Login from './screens/Login'
 import Onboarding from './screens/Onboarding'
@@ -8,8 +8,12 @@ import Settings from './screens/Settings'
 export default function App() {
   const [screen, setScreen] = useState(null)
   const [userContext, setUserContext] = useState('')
+  const initialized = useRef(false)
 
   useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+
     getSession().then((session) => {
       if (!session?.user) {
         setScreen('login')

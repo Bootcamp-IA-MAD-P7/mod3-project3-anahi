@@ -21,11 +21,12 @@ export async function getMe() {
 export async function saveContext(userContext, isNew = false) {
   const headers = await authHeaders()
   const method = isNew ? 'POST' : 'PUT'
-  await fetch(`${BASE}/me/context`, {
+  const res = await fetch(`${BASE}/me/context`, {
     method,
     headers,
     body: JSON.stringify({ user_context: userContext }),
   })
+  if (!res.ok) throw new Error('Failed to save context')
 }
 
 export async function streamGenerate(payload, onStatus, onResult, onError) {
