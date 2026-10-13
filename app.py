@@ -197,6 +197,7 @@ async def generate(
             }
 
         except RuntimeError as e:
+            print(f"RuntimeError: {e}", flush=True)
             if "All models failed" in str(e):
                 yield {
                     "event": "error",
@@ -220,7 +221,8 @@ async def generate(
                         }
                     ),
                 }
-        except Exception:
+        except Exception as e:
+            print(f"Generation error: {e}", flush=True)
             yield {
                 "event": "error",
                 "data": json.dumps(
