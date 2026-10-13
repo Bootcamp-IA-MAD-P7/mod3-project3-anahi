@@ -30,7 +30,7 @@ def get_user_id(token: str) -> str:
         payload = jwt.decode(
             token,
             signing_key.key,
-            algorithms=["RS256"],
+            algorithms=["EdDSA"],
             options={"verify_aud": False},
         )
         return payload["sub"]
