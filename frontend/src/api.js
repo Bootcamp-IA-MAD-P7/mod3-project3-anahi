@@ -1,6 +1,6 @@
 import { getToken } from './auth'
 
-const BASE = import.meta.env.VITE_API_BASE_URL
+const BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 async function authHeaders() {
   const token = await getToken()

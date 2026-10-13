@@ -73,15 +73,15 @@ Deployed on Render as a Docker web service using the Dockerfile at repo root.
 | `NEON_AUTH_JWKS_URL` | Yes | Neon Auth JWKS endpoint |
 | `ALLOWED_ORIGIN` | Yes | Your Render service URL, e.g. `https://saymore.onrender.com` |
 | `VITE_NEON_AUTH_URL` | Yes | Neon Auth URL — baked into the frontend bundle at build time |
-| `VITE_API_BASE_URL` | Yes | API base URL — baked into the frontend bundle at build time |
+| `VITE_API_BASE_URL` | Yes | API base URL — leave **empty** on Render (same-origin requests); use `/api` locally so the Vite proxy forwards to `:8000` |
 
 `VITE_*` variables are Vite build-time values. They must be set as Render
 environment variables before the Docker image builds — they are inlined into
 the JS bundle during `npm run build` and are not available at runtime.
 
-**Cold start warning:** the embedding model (~120MB) is downloaded at container
-startup if not cached. The first request after a cold deploy will be slow.
-This is expected behaviour — subsequent starts load from cache.
+**Cold start:** the embedding model (~120MB) is baked into the Docker image at
+build time (`FASTEMBED_CACHE_PATH=/app/.cache/fastembed`), so cold starts only
+load it from the image cache — no download at runtime.
 
 SPA client-side routing is handled by the catch-all route in `app.py` —
 no separate redirect rules needed on Render.
