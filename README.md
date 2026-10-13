@@ -1,13 +1,3 @@
----
-title: SayMore
-emoji: 🌿
-colorFrom: pink
-colorTo: orange
-sdk: docker
-app_port: 8000
-pinned: false
----
-
 # LLM LangGraph content generator
 
 Content generation pipeline that writes posts for Instagram, LinkedIn, Medium and
