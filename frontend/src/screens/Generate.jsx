@@ -73,7 +73,7 @@ export default function Generate({ userContext, onSettings }) {
   const [audience, setAudience] = useState('')
   const [language, setLanguage] = useState('English')
   const [image, setImage] = useState(false)
-  const [citations, setCitations] = useState(true)
+  const [citations, setCitations] = useState(false)
   const [busy, setBusy] = useState(false)
   const [lines, setLines] = useState([])
   const [overlayVisible, setOverlayVisible] = useState(false)
