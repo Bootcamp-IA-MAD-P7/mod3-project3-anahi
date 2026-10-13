@@ -1184,6 +1184,12 @@ body.is-generating .page-tail {
   color: var(--login-btn);
 }
 
+.login-forgot:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
 .field-error {
   display: block;
   margin-top: 5px;

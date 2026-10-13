@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react'
 import { signIn, signUp } from '../auth'
 import { getMe } from '../api'
-import Toast from '../components/Toast'
 
 export default function Login({ onSuccess }) {
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' })
-  const [toast, setToast] = useState({ id: 0, msg: '' })
 
   useEffect(() => {
     document.title = 'SayLess — Sign in'
   }, [])
-
-  const showToast = (msg) => setToast((t) => ({ id: t.id + 1, msg }))
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -102,11 +98,8 @@ export default function Login({ onSuccess }) {
                 <label className="login-label" htmlFor="password">
                   Password
                 </label>
-                <button
-                  className="login-forgot"
-                  type="button"
-                  onClick={() => showToast('Check your inbox for a reset link')}
-                >
+                {/* TODO: password reset — implement once Neon Auth reset flow is confirmed */}
+                <button className="login-forgot" type="button" disabled>
                   Forgot password?
                 </button>
               </div>
@@ -162,7 +155,6 @@ export default function Login({ onSuccess }) {
           </div>
         </div>
       </main>
-      {toast.msg && <Toast key={toast.id} message={toast.msg} />}
     </div>
   )
 }

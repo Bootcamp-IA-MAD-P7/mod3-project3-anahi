@@ -145,6 +145,11 @@ Full breakdown, markers and latest results in [docs/tests.md](docs/tests.md).
 
   Both live suites are opt-in and skipped unless `RUN_LIVE_LLM_TESTS=1`.
 
+## Known limitations
+
+- **Forgot password**: UI stub only. Implement once Neon Auth SDK password reset flow
+  is confirmed (`resetPassword(email)` + `/reset-password` token route on the frontend).
+
 ## Contributing
 
 Read [CONVENTIONS.md](CONVENTIONS.md) before opening a pull request.
