@@ -2,7 +2,7 @@ import math
 
 import feedparser
 
-from src.rag.embedder import embed_query, embed_texts
+from src.rag.embedder import embed_chunks, embed_query
 
 BBC_FEEDS = [
     "http://feeds.bbci.co.uk/news/business/rss.xml",
@@ -44,7 +44,8 @@ def _fetch_all_articles() -> list[dict]:
 def _rank_articles(topic: str, articles: list[dict], top_k: int = 3) -> list[dict]:
     topic_embedding = embed_query(topic)
     summaries = [f"{a['title']}. {a['summary']}" for a in articles]
-    article_embeddings = embed_texts(summaries)
+    embedded = embed_chunks([{"chunk_text": s} for s in summaries])
+    article_embeddings = [chunk["embedding"] for chunk in embedded]
     scores = [_cosine(topic_embedding, emb) for emb in article_embeddings]
     top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[
         :top_k

@@ -11,11 +11,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-ENV FASTEMBED_CACHE_PATH=/app/.cache/fastembed
-
-RUN uv run python -c "\
-from fastembed import TextEmbedding; \
-TextEmbedding('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"
+RUN find /app -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null; \
+    find /app -name "*.pyc" -delete 2>/dev/null; true
 
 COPY src/ ./src/
 COPY app.py ./

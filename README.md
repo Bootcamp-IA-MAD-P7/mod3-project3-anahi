@@ -25,6 +25,7 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
   | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard, Workers & Pages, Account ID |
   | `DATABASE_URL` | Neon dashboard → Connection Details (direct, no `-pooler`), for RAG storage |
   | `NEON_AUTH_JWKS_URL` | Neon dashboard → Auth (JWKS endpoint, used to verify request JWTs) |
+  | `HF_TOKEN` | https://huggingface.co/settings/tokens — Hugging Face Inference API token for embeddings |
 
 - **Run the app:**
 
@@ -32,10 +33,9 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
   uv run uvicorn app:app --reload
   ```
 
-  > **Cold start warning:** the embedding model
-  > (`paraphrase-multilingual-MiniLM-L12-v2`, int8 ONNX) is downloaded on first
-  > local boot (~120MB). Subsequent boots load from cache (~1–2s). In deploys it
-  > is baked into the Docker image at build time instead — see Deployment below.
+  > Embeddings are computed via the Hugging Face Inference API — no model is
+  > downloaded or loaded locally. First request may be slower while HF cold-starts
+  > the model; the API call waits for it automatically.
 
 ## Environment Variables
 
@@ -47,6 +47,7 @@ Substack using LangGraph orchestration, with an optional AI image per post. See
 | `CLOUDFLARE_ACCOUNT_ID` | For images | Cloudflare account id that owns the Workers AI models |
 | `DATABASE_URL` | For RAG | Neon Postgres connection string used to store and retrieve embedded chunks |
 | `NEON_AUTH_JWKS_URL` | Yes | Neon Auth JWKS endpoint for JWT verification — found in Neon dashboard → Auth |
+| `HF_TOKEN` | For RAG | Hugging Face Inference API token used to compute embeddings |
 
 ## Deployment
 
@@ -72,6 +73,7 @@ API, so front and back ship together with no separate static hosting.
 | `CLOUDFLARE_ACCOUNT_ID` | For images | Cloudflare account |
 | `DATABASE_URL` | For RAG | Neon direct connection string (no `-pooler`) |
 | `NEON_AUTH_JWKS_URL` | Yes | Neon Auth JWKS endpoint |
+| `HF_TOKEN` | For RAG | Hugging Face Inference API token used to compute embeddings |
 | `ALLOWED_ORIGIN` | Yes | Your Cloud Run service URL, e.g. `https://sayless-xxxx.a.run.app` |
 | `VITE_NEON_AUTH_URL` | Yes | Neon Auth URL — baked into the frontend bundle at build time |
 | `VITE_API_BASE_URL` | Yes | API base URL — leave **empty** in prod (same-origin requests); use `/api` locally so the Vite proxy forwards to `:8000` |
@@ -83,9 +85,9 @@ bundle during `npm run build` and are not available at runtime.
 **Ports:** Cloud Run injects `$PORT`; the image listens on it
 (`uvicorn ... --port ${PORT:-8000}`, `EXPOSE 8080`).
 
-**Cold start:** the embedding model (~120MB) is baked into the Docker image at
-build time (`FASTEMBED_CACHE_PATH=/app/.cache/fastembed`), so cold starts only
-load it from the image cache — no download at runtime.
+**Cold start:** no embedding model is baked into the image — embeddings are
+computed remotely via the Hugging Face Inference API, so the image is smaller
+and cold starts only load the Python process.
 
 SPA client-side routing is handled by the catch-all route in `app.py` —
 no separate redirect rules needed on Cloud Run.
@@ -117,9 +119,12 @@ The pipeline is orchestrated with LangGraph (`src/graph/`):
   `GET /models` (Groq's `AVAILABLE_MODELS` plus the OpenRouter free catalog) and
   the choice travels with the request as `model` + `provider`. Per-user request
   and token limits live in `src/llm/security.py`.
-- **Embeddings** (`src/rag/`): **fastembed** — lightweight ONNX-based
-  embedding (int8 quantized, no torch dependency), same multilingual MiniLM
-  model as before. Details in [docs/rag.md](docs/rag.md).
+- **Embeddings** (`src/rag/`): **Hugging Face Inference API** — the multilingual
+  MiniLM model (`paraphrase-multilingual-MiniLM-L12-v2`, 384 dimensions) is
+  called remotely; no model is loaded locally. Requires `HF_TOKEN`. Topics
+  submitted in any language embed correctly into the same 384-dimensional
+  space as English paper chunks, so RAG works without a translation step.
+  Details in [docs/rag.md](docs/rag.md).
 - **Images** (`src/chains/`): `image_node` is async, so the graph must be invoked
   with `await graph.ainvoke()`. It streams the extracted scene description (which
   already carries the platform's `IMAGE_STYLE` from the prompt) through

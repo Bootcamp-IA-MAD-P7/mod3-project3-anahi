@@ -141,8 +141,9 @@ Neon database:
 
 #### DB integration results
 
-Same run → **12 passed in 47.8s**, 10 of them DB (≈36s of the wall time is
-importing `fastembed` and loading the MiniLM ONNX model at collection):
+Same run → **12 passed in 47.8s**, 10 of them DB (embeddings now computed via
+the Hugging Face Inference API — timings below predate that migration and
+included local MiniLM model loading):
 
 | Test | Duration | Verified |
 |---|---|---|
@@ -158,8 +159,9 @@ importing `fastembed` and loading the MiniLM ONNX model at collection):
 | `test_upsert_updates_existing` | 1.03s | second upsert wins → `updated context`, single row (conflict update path) |
 
 Wall time for the full `-m integration` run was 47.8s despite ~12s of test
-calls — the remaining time is importing `fastembed` and loading the
-MiniLM ONNX model at collection.
+calls — the remaining time was local model loading under the old fastembed
+stack; embeddings now go through the Hugging Face Inference API with no
+local model load.
 
 ### Live integration results
 

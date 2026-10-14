@@ -4,7 +4,7 @@ import time
 import psycopg2
 import pytest
 
-from src.rag.embedder import embed_query, embed_texts
+from src.rag.embedder import embed_chunks, embed_query
 from src.rag.store import (
     find_similar_slug,
     get_user_context,
@@ -60,19 +60,19 @@ def conn():
 
 
 def make_chunks():
-    embeddings = embed_texts(TEXTS)
-    return [
-        {
-            "topic_slug": TEST_SLUG,
-            "chunk_text": text,
-            "embedding": embedding,
-            "paper_id": f"2401.0000{i}",
-            "paper_title": f"Test Paper {i}",
-            "authors": "Test Author",
-            "arxiv_url": f"https://arxiv.org/abs/2401.0000{i}",
-        }
-        for i, (text, embedding) in enumerate(zip(TEXTS, embeddings), start=1)
-    ]
+    return embed_chunks(
+        [
+            {
+                "topic_slug": TEST_SLUG,
+                "chunk_text": text,
+                "paper_id": f"2401.0000{i}",
+                "paper_title": f"Test Paper {i}",
+                "authors": "Test Author",
+                "arxiv_url": f"https://arxiv.org/abs/2401.0000{i}",
+            }
+            for i, text in enumerate(TEXTS, start=1)
+        ]
+    )
 
 
 def query_embedding():

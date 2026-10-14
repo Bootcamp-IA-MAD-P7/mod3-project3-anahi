@@ -8,7 +8,6 @@ dependencies = [
     "arxiv>=4.0.1",
     "datetime>=6.0",
     "fastapi>=0.143.0",
-    "fastembed>=0.9.0",
     "feedparser>=6.0.14",
     "groq<1",
     "httpx>=0.28.1",

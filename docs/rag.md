@@ -81,38 +81,18 @@ so citations can be built at output time without a second DB lookup.
 
 ### Embeddings
 
-Model: `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensions), loaded once
-at module import via `fastembed` (Qdrant's ONNX Runtime wrapper). fastembed
-uses the quantized int8 ONNX model (`Qdrant/paraphrase-multilingual-MiniLM-L12-v2-onnx-Q`)
-by default — ~120MB on disk, ~250MB RAM at inference, compared to ~2GB for
-the torch/sentence-transformers stack.
+Model: `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensions), called via
+the Hugging Face Inference API. No model is loaded locally — embeddings are
+computed remotely and returned as JSON float arrays. This eliminates the
+~250MB permanent RAM footprint of a local model, reducing runtime memory
+to spikes only during active RAG requests.
 
-Multilingual by design — a user topic submitted in Spanish or French is
-embedded directly without a translation step, and similarity search against
-English paper chunks still works because the model maps all languages into
-the same 384-dimensional vector space.
+Requires `HF_TOKEN` environment variable (free HF account token). The API
+call includes `wait_for_model: true` so cold model starts on HF's side
+are handled automatically.
 
-#### Migration sanity check
-
-Before swapping the stack, a throwaway script embedded the
-same sentences through the old (sentence-transformers fp32) and new (fastembed
-int8 ONNX) pipelines and compared vectors:
-
-```
-Cosine similarity between sentence-transformers and fastembed vectors:
-------------------------------------------------------------
-✓ 1.0000  quantum entanglement enables faster computation
-✓ 1.0000  AI is reshaping the workplace at record pace
-✓ 1.0000  climate change requires immediate global action
-✓ 1.0000  neural networks learn from large datasets
-✓ 1.0000  la inteligencia artificial cambia el mundo
-✓ 1.0000  l'apprentissage automatique est fascinant
-------------------------------------------------------------
-ALL PASS — no re-embedding needed, safe to switch
-```
-
-Cosine similarity 1.0000 across English, Spanish and French test sentences —
-vectors are interchangeable, no corpus re-embedding required on migration.
+Multilingual by design — topics in any language embed correctly into the
+same 384-dimensional space as English paper chunks.
 
 ### Storage
 
@@ -183,14 +163,14 @@ keyword search.
 ### Relevance matching
 
 Rather than keyword filtering (which fails on nuanced topics), we reuse the
-multilingual MiniLM model already loaded in memory from the arXiv pipeline.
-The user topic and each article's concatenated title + summary are embedded
-through fastembed, and cosine similarity (a small pure-Python `_cosine`
-helper in `bbc_fetcher.py`) ranks the pooled articles. The top 3 most
-semantically relevant articles are returned.
+same MiniLM embedding endpoint used by the arXiv pipeline. The user topic
+and each article's concatenated title + summary are embedded through the
+Hugging Face Inference API, and cosine similarity (a small pure-Python
+`_cosine` helper in `bbc_fetcher.py`) ranks the pooled articles. The top 3
+most semantically relevant articles are returned.
 
-No additional model, no additional embedding infrastructure. The model is
-already in memory.
+No additional model and no additional embedding infrastructure — both
+pipelines share the same API-backed embedder.
 
 ### Output format
 
