@@ -1,4 +1,4 @@
-# LLM LangGraph content generator
+# SayLess | LLM LangGraph content generator
 
 Content generation pipeline that writes posts for Instagram, LinkedIn, Medium and
 Substack using LangGraph orchestration, with an optional AI image per post. See
